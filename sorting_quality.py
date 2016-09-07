@@ -492,7 +492,8 @@ def load_waveforms(datapath,channel,times,pre=0.5,post=1.5,channels=384,sampling
     waveforms=[]
     for i in times:
         start = int((i - pre) * sampling_rate) * channels
-        waveforms.extend([mm[start:start+(pre+post)*sampling_rate*channels][channel::channels] - mm[start:start+(pre+post)*sampling_rate*channels][channel::channels][0]])
+        temp = mm[start:start+(pre+post)*sampling_rate*channels][channel::channels] - mm[start:start+(pre+post)*sampling_rate*channels][channel::channels][0]
+        waveforms.extend([temp * 0.195])
     return waveforms
 
 def get_spike_amplitudes(datapath,channel,times,pre=0.5,post=1.5,channels=384,sampling_rate=30000):
@@ -515,23 +516,37 @@ def get_PCs(datapath,channel,times,PC=1,pre=0.5,post=1.5,channels=384,sampling_r
         amplitudes.extend([np.max(np.abs(mm[start:start+(pre+post)*sampling_rate*channels][channel::channels] - mm[start:start+(pre+post)*sampling_rate*channels][channel::channels][0]))])
     return PCs
 
-def neuron_fig(clusterID,data,datapath,pc_data,clusterIDs,site_positions,quality,isiV,time_limits=None,timeplot_binsize=60.):
+def neuron_fig(clusterID,data,datapath,sortpath,site_positions,quality,isiV,time_limits=None,timeplot_binsize=60.,neighbor_colors=["#67572e","#50a874","#ff4d4d"]):
+    cluster_ID = int(clusterID)
+    cluster_IDs = np.load(os.path.join(sortpath,'spike_clusters.npy'))
+    pc_data = np.load(os.path.join(sortpath,'pc_features.npy'))
+    pc_ind_data = np.load(os.path.join(sortpath,'pc_feature_ind.npy'))
+    params_path = os.path.join(sortpath,'params.py')
+    params = read_kilosort_params(params_path)
+    spike_times_data = np.load(os.path.join(sortpath,'spike_times.npy'))/ float(params['sample_rate'])
+    spike_templates = np.load(os.path.join(sortpath,'spike_templates.npy'))
+    
     fig = plt.figure(figsize=(11,8.5))
     ax_text = placeAxesOnGrid(fig,xspan=[0.0,0.4],yspan=[0,0.1])
     ax_position = placeAxesOnGrid(fig,xspan=[0,0.1],yspan=[0.12,1.0])
     ax_waveform = placeAxesOnGrid(fig,xspan=[0.2,0.45],yspan=[0.12,0.65])
     ax_time = placeAxesOnGrid(fig,xspan=[0.2,1.0],yspan=[0.82,1.0])
-    ax_PCs = placeAxesOnGrid(fig,xspan=[0.5,0.85],yspan=[0,0.4])
+    ax_PCs = placeAxesOnGrid(fig,xspan=[0.5,0.8],yspan=[0,0.35])
     ax_ACG = placeAxesOnGrid(fig,dim=[1,2],xspan=[0.55,1.0],yspan=[0.5,0.7])
-    ax_CCGs_1 = placeAxesOnGrid(fig,dim=[1,2],xspan=[0.86,1.0],yspan=[0,0.13])
-    ax_CCGs_2 = placeAxesOnGrid(fig,dim=[1,2],xspan=[0.86,1.0],yspan=[0.13,0.26])
-    ax_CCGs_3 = placeAxesOnGrid(fig,dim=[1,2],xspan=[0.86,1.0],yspan=[0.26,0.39])
+    #ax_neighbor_waveform_1 = placeAxesOnGrid(fig,dim=[1,1],xspan=[0.82,1.0],yspan=[0,0.13])
+    #ax_neighbor_waveform_2 = placeAxesOnGrid(fig,dim=[1,1],xspan=[0.82,1.0],yspan=[0.13,0.26])
+    #ax_neighbor_waveform_3 = placeAxesOnGrid(fig,dim=[1,1],xspan=[0.82,1.0],yspan=[0.26,0.39])
+    ax_neighbor_waveforms=placeAxesOnGrid(fig,dim=[1,1],xspan=[0.82,1.0],yspan=[0.0,0.39])#[ax_neighbor_waveform_1,ax_neighbor_waveform_2,ax_neighbor_waveform_3]
+    ax_CCGs_1 = placeAxesOnGrid(fig,dim=[1,1],xspan=[0.53,0.68],yspan=[0.36,0.48])
+    ax_CCGs_2 = placeAxesOnGrid(fig,dim=[1,1],xspan=[0.7,.85],yspan=[0.36,0.48])
+    ax_CCGs_3 = placeAxesOnGrid(fig,dim=[1,1],xspan=[0.86,1.0],yspan=[0.36,0.48])
+    ax_CCGs = [ax_CCGs_1,ax_CCGs_2,ax_CCGs_3]
     
     #position plot
-    ax_position.imshow(data[u]['waveform_weights'][::4],extent=(site_positions[:,0][::4][0],site_positions[:,0][::4][0]+16,site_positions[:,1][::4][0],site_positions[:,1][::4][-1]),cmap=plt.cm.gray_r,clim=(0,0.5),interpolation='none')
-    ax_position.imshow(data[u]['waveform_weights'][1::4],extent=(site_positions[:,0][1::4][0],site_positions[:,0][1::4][0]+16,site_positions[:,1][1::4][0],site_positions[:,1][1::4][-1]),cmap=plt.cm.gray_r,clim=(0,0.5),interpolation='none')
-    ax_position.imshow(data[u]['waveform_weights'][2::4],extent=(site_positions[:,0][2::4][0],site_positions[:,0][2::4][0]+16,site_positions[:,1][2::4][0],site_positions[:,1][2::4][-1]),cmap=plt.cm.gray_r,clim=(0,0.5),interpolation='none')
-    ax_position.imshow(data[u]['waveform_weights'][3::4],extent=(site_positions[:,0][3::4][0],site_positions[:,0][3::4][0]+16,site_positions[:,1][3::4][0],site_positions[:,1][3::4][-1]),cmap=plt.cm.gray_r,clim=(0,0.5),interpolation='none')
+    ax_position.imshow(data[clusterID]['waveform_weights'][::4],extent=(site_positions[:,0][::4][0],site_positions[:,0][::4][0]+16,site_positions[:,1][::4][0],site_positions[:,1][::4][-1]),cmap=plt.cm.gray_r,clim=(0,0.5),interpolation='none')
+    ax_position.imshow(data[clusterID]['waveform_weights'][1::4],extent=(site_positions[:,0][1::4][0],site_positions[:,0][1::4][0]+16,site_positions[:,1][1::4][0],site_positions[:,1][1::4][-1]),cmap=plt.cm.gray_r,clim=(0,0.5),interpolation='none')
+    ax_position.imshow(data[clusterID]['waveform_weights'][2::4],extent=(site_positions[:,0][2::4][0],site_positions[:,0][2::4][0]+16,site_positions[:,1][2::4][0],site_positions[:,1][2::4][-1]),cmap=plt.cm.gray_r,clim=(0,0.5),interpolation='none')
+    ax_position.imshow(data[clusterID]['waveform_weights'][3::4],extent=(site_positions[:,0][3::4][0],site_positions[:,0][3::4][0]+16,site_positions[:,1][3::4][0],site_positions[:,1][3::4][-1]),cmap=plt.cm.gray_r,clim=(0,0.5),interpolation='none')
     ax_position.set_aspect(0.1)
     ax_position.set_ylim(3840,0)
     ax_position.set_xlim(0,70)
@@ -541,9 +556,74 @@ def neuron_fig(clusterID,data,datapath,pc_data,clusterIDs,site_positions,quality
     #time limits
     if time_limits == None:
         time_limits=[0,1e7]
-    all_spikes = data[u]['times']
+    all_spikes = data[clusterID]['times']
     spike_times = all_spikes[np.where(all_spikes > time_limits[0])[0][0]:np.where(all_spikes < time_limits[1])[0][-1]]
+    #print len(all_spikes)
+    #print all_spikes[0]
+    #print all_spikes[-1]
+    ##print np.where(all_spikes > time_limits[0])[0][0]
+    #print np.where(all_spikes < time_limits[1])[0][-1]
+    these_spikes = np.where(cluster_IDs==cluster_ID)[0][np.where(all_spikes > time_limits[0])[0][0]:np.where(all_spikes < time_limits[1])[0][-1]]
+    #spike_times = spike_times_data[these_spikes]
+
+    #for PC and CCG display, find close by clusters calculate 
+    #PC plot
+    these_templates=spike_templates[np.where(cluster_IDs==cluster_ID)[0]]
+    (included_templates,instances) = count_unique(these_templates)
+    this_template = included_templates[np.where(instances==np.max(instances))[0]]
+    ch1 = pc_ind_data[this_template][0]
+    ch2 = pc_ind_data[this_template][1]
+    ax_PCs.plot(pc_data[these_spikes][:,0,0],
+             pc_data[these_spikes][:,0,1],'bo',ms=1.5,markeredgewidth=0)
+    
+    nearby_trio = [0,0,0];
+    nearby_euclids = [10000,10000,10000];
+    nearby_times=[]
+    for other_cluster in data.keys():
+        if other_cluster != clusterID:
+            if (np.abs(data[clusterID]['ypos']-data[other_cluster]['ypos']) + np.abs(data[clusterID]['xpos']-data[other_cluster]['xpos'])) < nearby_euclids[-1]:
+                rank = np.where((np.abs(data[clusterID]['ypos']-data[other_cluster]['ypos']) + np.abs(data[clusterID]['xpos']-data[other_cluster]['xpos'])) < nearby_euclids)[0][0]
+                nearby_euclids[rank] = (np.abs(data[clusterID]['ypos']-data[other_cluster]['ypos']) + np.abs(data[clusterID]['xpos']-data[other_cluster]['xpos']))
+                nearby_trio[rank]=other_cluster           
+    for ii,neighbor in enumerate(nearby_trio):
+        all_spikes_neighbor = data[neighbor]['times']
+        indices_neighbor= np.where(cluster_IDs==int(neighbor))[0][np.where(all_spikes_neighbor > time_limits[0])[0][0]:np.where(all_spikes_neighbor < time_limits[1])[0][-1]]
+        neighbor_templates=spike_templates[indices_neighbor]
+        neighbor_spike_times = all_spikes_neighbor[np.where(all_spikes_neighbor > time_limits[0])[0][0]:np.where(all_spikes_neighbor < time_limits[1])[0][-1]]
+        nearby_times.append(neighbor_spike_times)
+        (included_templates,instances) = count_unique(neighbor_templates)
+        this_template = included_templates[np.where(instances==np.max(instances))[0]]
+        ch1_index = np.where(pc_ind_data[this_template] == ch1)[0]
+        ch2_index = np.where(pc_ind_data[this_template] == ch2)[0]
+        if ch2_index.size != 0 and ch1_index.size != 0:
+            ax_PCs.plot(pc_data[indices_neighbor][:,0,np.where(pc_ind_data[this_template] == ch1)[0][0]],
+                     pc_data[indices_neighbor][:,0,np.where(pc_ind_data[this_template] == ch2)[0][0]],
+                     'o',color=neighbor_colors[ii],ms=1,markeredgewidth=0,alpha=0.8)
             
+            all_diffs = []
+            for spike_time in spike_times:
+                try:
+                    neighbor_start = np.where(neighbor_spike_times < spike_time - 0.5)[0][-1]
+                except:
+                    neighbor_start = 0
+                try:
+                    neighbor_end = np.where(neighbor_spike_times > spike_time + 0.5)[0][0]
+                except:
+                    neighbor_end = -1
+                neighbor_chunk = neighbor_spike_times[neighbor_start:neighbor_end]
+                #print '\r'+str(spike_time)+' '+str(neighbor_start)+' - '+str(neighbor_end),
+                all_diffs.extend(neighbor_chunk - spike_time)
+            all_diffs=np.array(all_diffs).flatten()
+            hist,edges = np.histogram(all_diffs,bins=np.linspace(-0.2,0.2,400))
+            ax_CCGs[ii].plot(edges[:-1],hist,drawstyle='steps',color=neighbor_colors[ii])
+            ax_CCGs[ii].set_xlim(-.2,.2)
+            ax_CCGs[ii].xaxis.set_ticks([-0.125,0.0,0.125])
+            ax_CCGs[ii].axvline(0.0,ls='--',color='#ff8080')
+        cleanAxes(ax_CCGs[ii],total=True)
+    cleanAxes(ax_neighbor_waveforms,total=True)
+    cleanAxes(ax_PCs)    
+    ax_PCs.set_title('PC features')
+    
     #waveform plot
     cleanAxes(ax_waveform,total=True)
     ax_waveform.set_title('waveform')
@@ -567,13 +647,13 @@ def neuron_fig(clusterID,data,datapath,pc_data,clusterIDs,site_positions,quality
                 signal = np.max(np.abs(np.mean(ws,axis=0)-yoff*(ii/2)))
                 noise = np.mean(ws_bkd) + np.std(ws_bkd)* 4.
             ax_waveform.plot(x_range,np.mean(ws,axis=0)-yoff*(ii/2),color='#0066ff')
-        
+        if ii > 3 and ii < 14:
+            for nn,axis in enumerate(nearby_trio):
+                    if np.shape(x_range)[0] == np.shape(np.mean(ws,axis=0)-yoff*(ii/2))[0]:
+                        neighbor_ws = load_waveforms(datapath,channel,np.random.choice(nearby_times[nn],100,replace=False))
+                        ax_neighbor_waveforms.plot(x_range,np.mean(ws,axis=0)-yoff*(ii/2),color='#0066ff')
+                        ax_neighbor_waveforms.plot(x_range,np.mean(neighbor_ws,axis=0)-yoff*(ii/2),color=neighbor_colors[nn],alpha=0.8)
 
-    #PC plot
-    ax_PCs.plot(pc_data[np.where(cluster_IDs == int(u))[0]][:,0,0],
-             pc_data[np.where(cluster_IDs == int(u))[0]][:,0,1],'o',ms=1,markeredgewidth=0)
-    cleanAxes(ax_PCs)
-    ax_PCs.set_title('PC features')
 
 
     #time plot
@@ -582,8 +662,9 @@ def neuron_fig(clusterID,data,datapath,pc_data,clusterIDs,site_positions,quality
     ax_time.set_xlabel('time (sec)')
     ax_time.set_ylabel('firing rate (Hz)')
     ax_time.set_title('firing rate over time')
-    if len(spike_times) > 5000:
-        times = np.random.choice(spike_times,5000,replace=False)
+    max_spikes_to_plot = 2000
+    if len(spike_times) > max_spikes_to_plot:
+        times = np.random.choice(spike_times,max_spikes_to_plot,replace=False)
     else:
         times = spike_times
     amps = get_spike_amplitudes(datapath,peak_y_channel,times)
@@ -608,17 +689,16 @@ def neuron_fig(clusterID,data,datapath,pc_data,clusterIDs,site_positions,quality
     for axis in ax_ACG:
         axis.set_xlabel('time (sec)')
     
-        
-    #for CCG display, find close by clusters calculate 
     
     #text info plot
     cleanAxes(ax_text,total=True)
     ax_text.text(0, 1, 'cluster: '+clusterID, fontsize=12,weight='bold')
-    ax_text.text(10, 30, 'amp.: '+str(signal)+'uV', fontsize=10)
-    ax_text.text(10, 60, 'SNR: '+str(signal/noise), fontsize=10)
-    ax_text.text(50, 0, 'isolation distance: '+str(quality[1][np.where(quality[0]==int(clusterID))[0][0]]), fontsize=10)
-    ax_text.text(50, 30, 'purity [mahalanobis]: '+str(quality[2][np.where(quality[0]==int(clusterID))[0][0]]), fontsize=10)
-    ax_text.text(50, 60, 'ISI violation rate: '+str(isiV[1][np.where(isiV[0]==int(clusterID))[0][0]])+'%', fontsize=10)
+    "%.2f" % signal
+    ax_text.text(10, 30, 'amp.: '+"%.2f" % signal+'uV', fontsize=10)
+    ax_text.text(10, 60, 'SNR: '+"%.2f" % (signal/noise), fontsize=10)
+    ax_text.text(50, 0, 'isolation distance: '+"%.2f" % quality[1][np.where(quality[0]==int(clusterID))[0][0]], fontsize=10)
+    ax_text.text(50, 30, 'purity [mahalanobis]: '+"%.2f" % quality[2][np.where(quality[0]==int(clusterID))[0][0]], fontsize=10)
+    ax_text.text(50, 60, 'ISI violation rate: '+"%.2f" % isiV[1][np.where(isiV[0]==int(clusterID))[0][0]]+'%', fontsize=10)
     ax_text.set_ylim(100,0)
     ax_text.set_xlim(0,100)
     
