@@ -101,7 +101,7 @@ def isiViolations(directory,time_limits=None,isi=.002,min_isi=.0005):
     return cluster_IDs,isiV
     
 
-def masked_cluster_quality(directory,time_limits=None,n_fet=2):
+def masked_cluster_quality(directory,time_limits=None,n_fet=3):
     pc_features_path = os.path.join(directory,'pc_features.npy')
     pc_features_ind_path = os.path.join(directory,'pc_feature_ind.npy')
     spike_clusters_path = os.path.join(directory,'spike_clusters.npy')
@@ -189,13 +189,28 @@ def masked_cluster_quality_sparse(spike_clusters,pc_features,pc_feature_ind,spik
             fet_this_cluster = pc_features[these_spikes,:,:fet_n_chans].reshape((len(these_spikes),-1))
             this_cluster_chans = pc_feature_ind[i,:fet_n_chans]
             other_clusters_IDs = []
+            fet_other_clusters = []
             for ii,cluster_2 in enumerate(cluster_IDs):
                 if cluster_2 != cluster_ID:
                     cluster_2_chans = pc_feature_ind[ii,:fet_n_chans]
                     if any(i in cluster_2_chans for i in this_cluster_chans):
+                        cluster_2_ind = np.ones(fet_n_chans) * -1
+                        for i,chan in enumerate(this_cluster_chans):
+                            if chan in cluster_2_chans:
+                                cluster_2_ind[i]=cluster_2_chans[np.where(chan==cluster_2_chans)[0][0]]
+                            else:
+                                cluster_2_ind[i]=np.nan
+                        #cluster_2_ind = np.where(np.in1d(this_cluster_chans,cluster_2_chans))[0]
+                            
+                        fet_cluster2 = pc_features[these_spikes,:,:cluster_2_ind].reshape((len(these_spikes),-1))
+                        fet_other_clusters.extend(fet_cluster2)
+                        
                         other_clusters_IDs.extend([cluster_2])
-            other_clusters_indices = np.nonzero(np.in1d(spike_clusters,np.array(other_clusters_IDs).flatten()))[0]
-            fet_other_clusters=pc_features[other_clusters_indices,:,:fet_n_chans].reshape((np.shape(other_clusters_indices)[0],-1))
+ #           other_clusters_indices = np.nonzero(np.in1d(spike_clusters,np.array(other_clusters_IDs).flatten()))[0]
+            
+ 
+            fet_other_clusters = np.array(fet_other_clusters).flatten()
+            #fet_other_clusters=pc_features[other_clusters_indices,:,:fet_n_chans].reshape((np.shape(other_clusters_indices)[0],-1))
             unit_quality[i],contamination_rate[i] = masked_cluster_quality_core(fet_this_cluster,fet_other_clusters)
             
         print '\rcluster '+str(cluster_ID)+' ('+str(np.shape(fet_this_cluster)[0])+'): '+str(unit_quality[i])+' '+str(contamination_rate[i]),
@@ -617,7 +632,7 @@ def neuron_fig(clusterID,data,datapath,sortpath,site_positions,quality,isiV,time
             hist,edges = np.histogram(all_diffs,bins=np.linspace(-0.2,0.2,400))
             ax_CCGs[ii].plot(edges[:-1],hist,drawstyle='steps',color=neighbor_colors[ii])
             ax_CCGs[ii].set_xlim(-.2,.2)
-            ax_CCGs[ii].xaxis.set_ticks([-0.125,0.0,0.125])
+            ax_CCGs[ii].xaxis.set_ticks([-0.075,0.0,0.075])
             ax_CCGs[ii].axvline(0.0,ls='--',color='#ff8080')
         cleanAxes(ax_CCGs[ii],total=True)
     cleanAxes(ax_neighbor_waveforms,total=True)
