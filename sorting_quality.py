@@ -168,7 +168,7 @@ def masked_cluster_quality(directory,time_limits=None,n_fet=3):
     return cluster_IDs,unit_quality,contamination_rate
 
 
-def masked_cluster_quality_sparse(spike_clusters,pc_features,pc_feature_ind,spike_times,time_limits=None,fet_n_chans=4):
+def masked_cluster_quality_sparse(spike_clusters,pc_features,pc_feature_ind,spike_times,time_limits=None,n_fet=2,fet_n_chans=2):
     fet_N = np.shape(pc_features)[1] * fet_n_chans
     N = len(spike_clusters)
     cluster_IDs = np.unique(spike_clusters)
@@ -186,41 +186,48 @@ def masked_cluster_quality_sparse(spike_clusters,pc_features,pc_feature_ind,spik
             unit_quality[i] = 0;
             contamination_rate[i] =np.nan;
         else:
-            fet_this_cluster = pc_features[these_spikes,:,:fet_n_chans].reshape((len(these_spikes),-1))
+            fet_this_cluster = pc_features[these_spikes,:n_fet,:fet_n_chans]#.reshape((len(these_spikes),-1))
+            #print 'this cluster PCs: '+str(np.shape(fet_this_cluster))
             this_cluster_chans = pc_feature_ind[i,:fet_n_chans]
             other_clusters_IDs = []
             fet_other_clusters = []
             for ii,cluster_2 in enumerate(cluster_IDs):
                 if cluster_2 != cluster_ID:
-                    cluster_2_chans = pc_feature_ind[ii,:fet_n_chans]
-                    if any(i in cluster_2_chans for i in this_cluster_chans):
+                    cluster_2_chans = pc_feature_ind[ii]
+                    fet_cluster2 = np.zeros(np.shape(fet_this_cluster))
+                    if sum(np.in1d(this_cluster_chans,cluster_2_chans)) == len(cluster_2_chans):#any(i in cluster_2_chans for i in this_cluster_chans):#
+                        #print str(cluster_2)+' | '+str(cluster_ID)
                         cluster_2_ind = np.ones(fet_n_chans) * -1
-                        for i,chan in enumerate(this_cluster_chans):
+                        other_clusters_IDs.extend([cluster_2])
+                        for c,chan in enumerate(this_cluster_chans):
                             if chan in cluster_2_chans:
-                                cluster_2_ind[i]=cluster_2_chans[np.where(chan==cluster_2_chans)[0][0]]
+                                cluster_2_ind[c]=np.where(chan==cluster_2_chans)[0][0]
+                                for f in range(n_fet):
+                                    fet_cluster2[:,f,c] = pc_features[these_spikes,f,np.where(chan==cluster_2_chans)[0][0]]
                             else:
-                                cluster_2_ind[i]=np.nan
+                                cluster_2_ind[c]=np.nan
                         #cluster_2_ind = np.where(np.in1d(this_cluster_chans,cluster_2_chans))[0]
-                            
-                        fet_cluster2 = pc_features[these_spikes,:,:cluster_2_ind].reshape((len(these_spikes),-1))
+                        #print 'other cluster PCs: '+str(np.shape(fet_cluster2))
+                        #fet_cluster2 = pc_features[these_spikes,:,:cluster_2_ind].reshape((len(these_spikes),-1))
                         fet_other_clusters.extend(fet_cluster2)
                         
-                        other_clusters_IDs.extend([cluster_2])
- #           other_clusters_indices = np.nonzero(np.in1d(spike_clusters,np.array(other_clusters_IDs).flatten()))[0]
-            
- 
-            fet_other_clusters = np.array(fet_other_clusters).flatten()
-            #fet_other_clusters=pc_features[other_clusters_indices,:,:fet_n_chans].reshape((np.shape(other_clusters_indices)[0],-1))
+                        #other_clusters_IDs.extend([cluster_2])
+            #other_clusters_indices = np.nonzero(np.in1d(spike_clusters,np.array(other_clusters_IDs).flatten()))[0]
+            #print np.shape(other_clusters_indices)
+            print np.shape(fet_other_clusters)
+            fet_other_clusters = np.array(fet_other_clusters).reshape((np.shape(fet_other_clusters)[0],-1))
+            fet_this_cluster = fet_this_cluster.reshape((len(these_spikes),-1))
+            #fet_other_clusters=pc_features[other_clusters_indices,:,:fet_n_chans]#.reshape((np.shape(other_clusters_indices)[0],-1))
             unit_quality[i],contamination_rate[i] = masked_cluster_quality_core(fet_this_cluster,fet_other_clusters)
             
         print '\rcluster '+str(cluster_ID)+' ('+str(np.shape(fet_this_cluster)[0])+'): '+str(unit_quality[i])+' '+str(contamination_rate[i]),
     return cluster_IDs,unit_quality,contamination_rate
 
-def masked_cluster_quality_core(fet_this_cluster,fet_other_clusters,point_limit=2000000):
+def masked_cluster_quality_core(fet_this_cluster,fet_other_clusters,point_limit=20000000):
     n = np.shape(fet_this_cluster)[0]
     n_other = np.shape(fet_other_clusters)[0]
     n_fet = np.shape(fet_this_cluster)[1]
-    
+
     if n_other > n and n > n_fet:
         if n > point_limit:
             random_indices = np.random.choice(n,point_limit,replace=False)
@@ -235,7 +242,17 @@ def masked_cluster_quality_core(fet_this_cluster,fet_other_clusters,point_limit=
         md_self = np.sort(cdist(fet_this_cluster.mean(0).reshape(1,fet_this_cluster.shape[1]),
                                  fet_this_cluster,
                                  'mahalanobis')[0])
-        unit_quality = np.median(md)
+        #print fet_this_cluster.mean(0).reshape(1,fet_this_cluster.shape[1])
+        plt.figure()
+        plt.plot(fet_this_cluster[:,0],fet_this_cluster[:,1],'r.')
+        plt.plot(fet_other_clusters[:n,0],fet_other_clusters[:n,1],'b.')
+        plt.plot(fet_this_cluster.mean(0).reshape(1,fet_this_cluster.shape[1])[0][0],fet_this_cluster.mean(0).reshape(1,fet_this_cluster.shape[1])[0][1],'*',color='#ffcccc',ms=12)
+        #
+        plt.figure()
+        plt.hist(md[:n],bins=100,range=(0,10),color='b')
+        plt.hist(md_self,bins=100,range=(0,10),color='r')
+        plt.title('iso: '+str(np.max(md[:n])))
+        unit_quality = np.max(md[:n])
         contamination_rate = 1 - (tipping_point(md_self,md) / float(len(md_self)))
     else:
         unit_quality = 0
@@ -270,26 +287,30 @@ def tipping_point(x,y):
 
 def plot_quality(quality,isiV,(good,mua,unsorted)):
     f,ax = plt.subplots(3,1,figsize=(4,6));
-    ax[0].plot(quality[1][np.where(np.in1d(quality[0],good))[0]],quality[2][np.where(np.in1d(quality[0],good))[0]],'go',label='good');#plt.ylim(0,1)
-    ax[0].plot(quality[1][np.where(np.in1d(quality[0],mua))[0]],quality[2][np.where(np.in1d(quality[0],mua))[0]],'ro',label='mua');#plt.ylim(0,1)
-    ax[0].plot(quality[1][np.where(np.in1d(quality[0],unsorted))[0]],quality[2][np.where(np.in1d(quality[0],unsorted))[0]],'k.',label='unsorted');#plt.ylim(0,1)
+    ax[0].plot(quality[1][np.where(np.in1d(quality[0],good))[0]],quality[2][np.where(np.in1d(quality[0],good))[0]],'o',label='good',mfc='None',mec='g');#plt.ylim(0,1)
+    ax[0].plot(quality[1][np.where(np.in1d(quality[0],mua))[0]],quality[2][np.where(np.in1d(quality[0],mua))[0]],'o',label='mua',mfc='None',mec='r');#plt.ylim(0,1)
+    ax[0].plot(quality[1][np.where(np.in1d(quality[0],unsorted))[0]],quality[2][np.where(np.in1d(quality[0],unsorted))[0]],'k.',label='unsorted',alpha=0.3);#plt.ylim(0,1)
     ax[0].set_xlabel('iso distance');ax[0].set_ylabel('contamination from mahal.')
-    ax[0].set_ylim(ymin=0);ax[0].set_xlim(xmin=2)
+    ax[0].set_ylim(ymin=0);ax[0].set_xlim(xmin=1.)
+    # if np.max(quality[1]) > 20:
+    #     ax[0].set_xlim(1,20)
     legend = ax[0].legend(loc='upper right', shadow=False, fontsize=10,numpoints=1)
 
-    ax[1].plot(quality[1][np.where(np.in1d(quality[0],good))[0]],isiV[1][np.where(np.in1d(isiV[0],good))[0]],'go',label='good');plt.ylim(0,1)
-    ax[1].plot(quality[1][np.where(np.in1d(quality[0],mua))[0]],isiV[1][np.where(np.in1d(isiV[0],mua))[0]],'ro',label='mua');plt.ylim(0,1)
-    ax[1].plot(quality[1][np.where(np.in1d(quality[0],unsorted))[0]],isiV[1][np.where(np.in1d(isiV[0],unsorted))[0]],'k.',label='unsorted');plt.ylim(0,1)
+    ax[1].plot(quality[1][np.where(np.in1d(quality[0],good))[0]],isiV[1][np.where(np.in1d(isiV[0],good))[0]],'o',label='good',mfc='None',mec='g');plt.ylim(0,1)
+    ax[1].plot(quality[1][np.where(np.in1d(quality[0],mua))[0]],isiV[1][np.where(np.in1d(isiV[0],mua))[0]],'o',label='mua',mfc='None',mec='r');plt.ylim(0,1)
+    ax[1].plot(quality[1][np.where(np.in1d(quality[0],unsorted))[0]],isiV[1][np.where(np.in1d(isiV[0],unsorted))[0]],'k.',label='unsorted',alpha=0.3);plt.ylim(0,1)
     ax[1].set_xlabel('iso distance');ax[1].set_ylabel('isi contamination')
-    ax[1].set_ylim(ymin=0);ax[1].set_xlim(xmin=2)
+    ax[1].set_ylim(ymin=0);ax[1].set_xlim(xmin=1.)
+    # if np.max(quality[1]) > 20:
+    #     ax[1].set_xlim(1,20)
     legend = ax[1].legend(loc='upper right', shadow=False, fontsize=10,numpoints=1)
 
-    ax[2].plot(quality[2][np.where(np.in1d(quality[0],good))[0]],isiV[1][np.where(np.in1d(isiV[0],good))[0]],'go',label='good');plt.ylim(0,1)
-    ax[2].plot(quality[2][np.where(np.in1d(quality[0],mua))[0]],isiV[1][np.where(np.in1d(isiV[0],mua))[0]],'ro',label='mua');plt.ylim(0,1)
-    ax[2].plot(quality[2][np.where(np.in1d(quality[0],unsorted))[0]],isiV[1][np.where(np.in1d(isiV[0],unsorted))[0]],'k.',label='unsorted');plt.ylim(0,1)
+    ax[2].plot(quality[2][np.where(np.in1d(quality[0],good))[0]],isiV[1][np.where(np.in1d(isiV[0],good))[0]],'o',label='good',mfc='None',mec='g');plt.ylim(0,1)
+    ax[2].plot(quality[2][np.where(np.in1d(quality[0],mua))[0]],isiV[1][np.where(np.in1d(isiV[0],mua))[0]],'o',label='mua',mfc='None',mec='r');plt.ylim(0,1)
+    ax[2].plot(quality[2][np.where(np.in1d(quality[0],unsorted))[0]],isiV[1][np.where(np.in1d(isiV[0],unsorted))[0]],'k.',label='unsorted',alpha=0.3);plt.ylim(0,1)
     ax[2].set_ylabel('isi contamination');ax[2].set_xlabel('contamination from mahal.')
     ax[2].set_ylim(ymin=0);ax[2].set_xlim(xmin=0)
-    legend = ax[2].legend(loc='upper left', shadow=False, fontsize=10,numpoints=1)
+    #legend = ax[2].legend(loc='upper left', shadow=False, fontsize=10,numpoints=1)
     
     plt.tight_layout()
 
@@ -647,7 +668,7 @@ def neuron_fig(clusterID,data,datapath,sortpath,site_positions,quality,isiV,time
     times = np.random.choice(spike_times,100,replace=False)
     random_times = np.random.rand(100) * (np.max(spike_times)-np.min(spike_times)) + np.min(spike_times)
     xoffs=[0,100,50,150,0,100,50,150,0,100,50,150,0,100,50,150,0,100][::-1]
-    yoff=-1500
+    yoff=1500
     signal = 0;
     for ii,channel in enumerate(np.linspace(peak_y_channel-8,peak_y_channel+10,18)):
         ws = load_waveforms(datapath,channel,times)
@@ -673,7 +694,7 @@ def neuron_fig(clusterID,data,datapath,sortpath,site_positions,quality,isiV,time
 
     #time plot
     hist,edges = np.histogram(spike_times,bins=np.ceil(spike_times[-1] / timeplot_binsize))
-    ax_time.plot(edges[:-1],hist/float(timeplot_binsize),drawstyle='steps')  
+    ax_time.plot(edges[1:],hist/float(timeplot_binsize),drawstyle='steps')  
     ax_time.set_xlabel('time (sec)')
     ax_time.set_ylabel('firing rate (Hz)')
     ax_time.set_title('firing rate over time')
