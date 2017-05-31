@@ -46,14 +46,21 @@ function sorting_metric_output = sorting_metrics()
         end
         spikes_by_bin = spikes_by_bin(find(clusters>0), :);
         active_clusters = find(clusters>0);
-        disp(active_clusters);
         parfor_progress(0);
         save('spikes_by_bin.mat', 'spikes_by_bin');
 %% Cross-correlation matrix with a threshold
         %  false positives & negatives
         %  max R with a sliding lag, max lag 50 ms
         %  questionable sorting if high R at close to 0 ms lag
-        
+        disp(size(spikes_by_bin'));
+        n = size(spikes_by_bin',2);
+        [A,p] = corrcoef(spikes_by_bin');
+         p(p >= 0.05) = 0;
+        p(1:length(p)+1:numel(p)) = 0;
+        p = round(p, 4)
+        A(1:n+1:n*n) = 0;
+        heatmap(A, active_clusters, active_clusters,p, 'Colorbar', 'true', 'ShowAllTicks', true);
+        [row,col,v] = find(p~=0);
         % Generate cross corr matrix
     %% Refractory period violations vector (ISI)
         %   add up each time ISIs are below the absolute refractory period (3 ms)
