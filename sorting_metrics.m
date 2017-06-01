@@ -65,34 +65,39 @@ function sorting_metric_output = sorting_metrics()
 %% Cross Correlograms
     % initialize variables
     max_lag = 50e-3;
-    cell1 = 1;  % make this inputable
-    cell2 = 2; % make this inputable 
     lag_units = max_lag/bin_size;
     bootstrap_num = 100;
+    num_clusters = size(spikes_by_bin,1);
     %start loop
     disp('Calculating pair-wise xcorr & comparing them to bootstrapped xcorr.');
-    parfor_progress(size(spikes_by_bin,1));
-    parfor k=1:size(spikes_by_bin,1)
-        parfor_progress;
-        cell1_data = spikes_by_bin(cell1, :);
-        for j=1:size(spikes_by_bin,1)
+    parfor_progress(num_clusters);
+    avg_diff_array = zeros(num_clusters,num_clusters);
+    half_matrix = triu(ones(num_clusters,num_clusters));
+    parfor k=1:num_clusters
+        cell1_data = spikes_by_bin(k, :);
+        for j=1:num_clusters
             if k==j
                 continue;
             end
-            cell2_data = spikes_by_bin(cell2, :);
+            % make sure i haven't seen this combo before
+            if half_matrix(j,k) > 0
+               continue;
+            end
+            cell2_data = spikes_by_bin(j, :);
             %compute cross-correlelogram
             [x_coeff, lag] = xcorr(cell1_data, cell2_data, lag_units, 'coeff');
 
             % generate bootstrapped shuffled cell 2
-            acor_with_random = zeros(bootstrap_num, size(x_coeff,2));
             acor_diff = zeros(bootstrap_num,1);
             for i=1:bootstrap_num
-                cell2_data_rand = cell2_data(randperm(length(cell2_data)));
-                [x_coeff2, lag] = xcorr(spikes_by_bin(cell1, :), cell2_data_rand, max_lag/bin_size, 'coeff');
-                acor_diff(i) = mean(acor/max(x_coeff)-x_coeff2/max(x_coeff)); % difference normalized to max normal x_coeff
+                 cell2_data_rand = cell2_data(randperm(length(cell2_data)));
+                 [x_coeff2, lag] = xcorr(spikes_by_bin(cell1, :), cell2_data_rand, max_lag/bin_size, 'coeff');
+                 acor_diff(i) = mean(abs(x_coeff/max(x_coeff)-x_coeff2/max(x_coeff))); % difference normalized to max normal x_coeff
             end;
             avg_diff = mean(abs(acor_diff));
-            disp([num2str(k) '&' num2str(j) ': Average Diff Between XCorr And Bootstrapped XCorr: ' num2str(avg_diff)]);
+            avg_diff_array(k,j) = avg_diff;
+            fprintf ('/n');
+            fprintf([num2str(k) '&' num2str(j) ': ' num2str(avg_diff) ' ']);
         %     plot(lag, x_coeff);
         %     title(['Cross Correlelogram' char(10) '(Cell ' num2str(cell1) ' vs. Cell ' num2str(cell2) ')']);
         %     a3 = gca;
@@ -112,6 +117,7 @@ function sorting_metric_output = sorting_metrics()
         end
         parfor_progress;
     end
+    parfor_progress(0);
     %% Refractory period violations vector (ISI)
         %   add up each time ISIs are below the absolute refractory period (3 ms)
         %   compute fractional level of contamination
@@ -120,5 +126,4 @@ function sorting_metric_output = sorting_metrics()
         %   false positive matrix
         %   measure size of valley; DeWeese says good neurons have big valleys
         %   smooth with gaussian & measure with width at half max
-
 end
