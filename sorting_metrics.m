@@ -53,6 +53,7 @@ function sorting_metric_output = sorting_metrics()
         %  max R with a sliding lag, max lag 50 ms
         %  questionable sorting if high R at close to 0 ms lag
         disp(size(spikes_by_bin'));
+        spikes_by_bin(2, :) = spikes_by_bin(1, :);
         n = size(spikes_by_bin',2);
         [A,p] = corrcoef(spikes_by_bin');
          p(p >= 0.05) = 0;
@@ -61,7 +62,34 @@ function sorting_metric_output = sorting_metrics()
         A(1:n+1:n*n) = 0;
         heatmap(A, active_clusters, active_clusters,p, 'Colorbar', 'true', 'ShowAllTicks', true);
         [row,col,v] = find(p~=0);
-        % Generate cross corr matrix
+%% Cross Correlograms
+    % set max lag
+    max_lag = 50e-3;
+    %compute cross-correlelogram
+    clf;
+    cell1 = 1;
+    cell2 = 2;
+    [acor, lag] = xcorr(spikes_by_bin(cell1, :), spikes_by_bin(cell2, :), max_lag/bin_size, 'coeff');
+    plot(lag, acor);
+    title(['Cross Correlelogram' char(10) '(Cell ' num2str(cell1) ' vs. Cell ' num2str(cell2) ')']);
+    a3 = gca;
+    a3.XTickLabel = a3.XTick*5;
+    xlabel('Lag (ms)');
+    ylabel('R value');
+
+    %randomly rearrange cell2 spikes
+    cell2_data = spikes_by_bin(cell2, :);
+    cell2_rand = cell2_data(randperm(length(cell2_data)));
+    [acor, lag] = xcorr(spikes_by_bin(cell1, :), cell2_rand, max_lag/bin_size, 'coeff');
+    hold on;
+    plot(lag, acor);
+    title(['Cross Correlelogram' char(10) '(Cell ' num2str(cell1) ' vs. Cell ' num2str(cell2) ')']);
+    a3 = gca;
+    a3.XTickLabel = a3.XTick*5;
+    xlabel('Lag (ms)');
+    ylabel('R value');
+    legend('Original Data', 'Shuffled Cell2 data');
+    hold off;
     %% Refractory period violations vector (ISI)
         %   add up each time ISIs are below the absolute refractory period (3 ms)
         %   compute fractional level of contamination
