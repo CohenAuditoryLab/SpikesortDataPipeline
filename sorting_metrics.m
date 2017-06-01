@@ -63,33 +63,55 @@ function sorting_metric_output = sorting_metrics()
         heatmap(A, active_clusters, active_clusters,p, 'Colorbar', 'true', 'ShowAllTicks', true);
         [row,col,v] = find(p~=0);
 %% Cross Correlograms
-    % set max lag
+    % initialize variables
     max_lag = 50e-3;
-    %compute cross-correlelogram
-    clf;
-    cell1 = 1;
-    cell2 = 2;
-    [acor, lag] = xcorr(spikes_by_bin(cell1, :), spikes_by_bin(cell2, :), max_lag/bin_size, 'coeff');
-    plot(lag, acor);
-    title(['Cross Correlelogram' char(10) '(Cell ' num2str(cell1) ' vs. Cell ' num2str(cell2) ')']);
-    a3 = gca;
-    a3.XTickLabel = a3.XTick*5;
-    xlabel('Lag (ms)');
-    ylabel('R value');
+    cell1 = 1;  % make this inputable
+    cell2 = 2; % make this inputable 
+    lag_units = max_lag/bin_size;
+    bootstrap_num = 100;
+    %start loop
+    disp('Calculating pair-wise xcorr & comparing them to bootstrapped xcorr.');
+    parfor_progress(size(spikes_by_bin,1));
+    parfor k=1:size(spikes_by_bin,1)
+        parfor_progress;
+        cell1_data = spikes_by_bin(cell1, :);
+        for j=1:size(spikes_by_bin,1)
+            if k==j
+                continue;
+            end
+            cell2_data = spikes_by_bin(cell2, :);
+            %compute cross-correlelogram
+            [x_coeff, lag] = xcorr(cell1_data, cell2_data, lag_units, 'coeff');
 
-    %randomly rearrange cell2 spikes
-    cell2_data = spikes_by_bin(cell2, :);
-    cell2_rand = cell2_data(randperm(length(cell2_data)));
-    [acor, lag] = xcorr(spikes_by_bin(cell1, :), cell2_rand, max_lag/bin_size, 'coeff');
-    hold on;
-    plot(lag, acor);
-    title(['Cross Correlelogram' char(10) '(Cell ' num2str(cell1) ' vs. Cell ' num2str(cell2) ')']);
-    a3 = gca;
-    a3.XTickLabel = a3.XTick*5;
-    xlabel('Lag (ms)');
-    ylabel('R value');
-    legend('Original Data', 'Shuffled Cell2 data');
-    hold off;
+            % generate bootstrapped shuffled cell 2
+            acor_with_random = zeros(bootstrap_num, size(x_coeff,2));
+            acor_diff = zeros(bootstrap_num,1);
+            for i=1:bootstrap_num
+                cell2_data_rand = cell2_data(randperm(length(cell2_data)));
+                [x_coeff2, lag] = xcorr(spikes_by_bin(cell1, :), cell2_data_rand, max_lag/bin_size, 'coeff');
+                acor_diff(i) = mean(acor/max(x_coeff)-x_coeff2/max(x_coeff)); % difference normalized to max normal x_coeff
+            end;
+            avg_diff = mean(abs(acor_diff));
+            disp([num2str(k) '&' num2str(j) ': Average Diff Between XCorr And Bootstrapped XCorr: ' num2str(avg_diff)]);
+        %     plot(lag, x_coeff);
+        %     title(['Cross Correlelogram' char(10) '(Cell ' num2str(cell1) ' vs. Cell ' num2str(cell2) ')']);
+        %     a3 = gca;
+        %     a3.XTickLabel = a3.XTick*5;
+        %     xlabel('Lag (ms)');
+        %     ylabel('R value');
+
+        %     hold on;
+        %     plot(lag, x_coeff2);
+        %     title(['Cross Correlelogram' char(10) '(Cell ' num2str(cell1) ' vs. Cell ' num2str(cell2) ')']);
+        %     a3 = gca;
+        %     a3.XTickLabel = a3.XTick*5;
+        %     xlabel('Lag (ms)');
+        %     ylabel('R value');
+        %     legend('Original Data', 'Shuffled Cell2 data');
+        %     hold off;
+        end
+        parfor_progress;
+    end
     %% Refractory period violations vector (ISI)
         %   add up each time ISIs are below the absolute refractory period (3 ms)
         %   compute fractional level of contamination
