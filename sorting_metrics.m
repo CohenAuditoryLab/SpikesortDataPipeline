@@ -118,6 +118,10 @@ function sorting_metric_output = sorting_metrics()
         parfor_progress;
     end
     parfor_progress(0);
+    
+    heatmap(avg_diff_array, active_clusters, active_clusters,[], 'Colorbar', 'true', 'ShowAllTicks', true);
+    title('Mean Difference between XCorr & XCorr with Bootstrapped Cell 2');
+    xlabel('Clusters'); ylabel('Clusters');
     %% Refractory period violations vector (ISI)
         %   add up each time ISIs are below the absolute refractory period (3 ms)
         %   compute fractional level of contamination
