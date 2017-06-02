@@ -122,10 +122,44 @@ function sorting_metric_output = sorting_metrics()
     heatmap(avg_diff_array, active_clusters, active_clusters,[], 'Colorbar', 'true', 'ShowAllTicks', true);
     title('Mean Difference between XCorr & XCorr with Bootstrapped Cell 2');
     xlabel('Clusters'); ylabel('Clusters');
-    %% Refractory period violations vector (ISI)
-        %   add up each time ISIs are below the absolute refractory period (3 ms)
-        %   compute fractional level of contamination
-
+%% Refractory period violations vector (ISI)
+    %   add up each time ISIs are below the absolute refractory period (3 ms)
+    %   compute fractional level of contamination
+        %initialize variables
+            refractory_limit = 3e-3;
+            parfor_progress(max(spike_clusters));
+            violations = [];
+        %loop through clusters
+            parfor i=1:max(spike_clusters)
+                %get spike times in cluster
+                    cluster_spikes = double(spike_times(find(spike_clusters==i)))./double(sampling_rate); % now in seconds
+                    clusters(i) = numel(cluster_spikes);
+                    if clusters(i) == 0
+                        violations(i) = -1; %gonna take these out later
+                        continue;
+                    end
+                %set violations = 0 if there's only 1 spike
+                    if clusters(i) < 2
+                        violations(i) = 0;
+                        continue;
+                    end
+                % set violations by looping through spikes
+                    violation_counter = 0;
+                    for k=2:clusters(i)
+                        % add to violation counter if the second spike is
+                        % less than refractory period limit
+                        if cluster_spikes(k) - cluster_spikes(k-1) < refractory_limit
+                            violation_counter = violation_counter + 1;
+                        end
+                    end
+                    violations(i) = violation_counter;
+                parfor_progress(i);
+            end
+            violations = violations(find(violations>-1));
+            uf = uifigure;
+            t = uitable(uf,'Data',horzcat(active_clusters, violations'));
+            t.ColumnName = {'Cluster','Violations'};
+            parfor_progress(0);
     %% Autocorrelation; false positive matrix
         %   false positive matrix
         %   measure size of valley; DeWeese says good neurons have big valleys
