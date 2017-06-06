@@ -47,21 +47,28 @@ function sorting_metric_output = sorting_metrics()
         spikes_by_bin = spikes_by_bin(find(clusters>0), :);
         active_clusters = find(clusters>0);
         parfor_progress(0);
-        save('spikes_by_bin.mat', 'spikes_by_bin');
-%% Cross-correlation matrix with a threshold
+        % save binned spikes
+        new_directory = [data_directory slash 'sorting_fidelity_metrics'];
+        if 7~=exist(new_directory, 'dir')
+            mkdir(new_directory);
+        end
+        save([new_directory slash 'binned_spikes_by_cluster.mat'], 'spikes_by_bin');
+        disp('Saved binned spikes by cluster.');
+%% 0 lag pair-wise correlation matrix with a threshold
         %  false positives & negatives
         %  max R with a sliding lag, max lag 50 ms
         %  questionable sorting if high R at close to 0 ms lag
-        disp(size(spikes_by_bin'));
-        spikes_by_bin(2, :) = spikes_by_bin(1, :);
         n = size(spikes_by_bin',2);
         [A,p] = corrcoef(spikes_by_bin');
          p(p >= 0.05) = 0;
         p(1:length(p)+1:numel(p)) = 0;
-        p = round(p, 4)
+        p = round(p, 4);
         A(1:n+1:n*n) = 0;
-        heatmap(A, active_clusters, active_clusters,p, 'Colorbar', 'true', 'ShowAllTicks', true);
-        [row,col,v] = find(p~=0);
+        h = heatmap(A, active_clusters, active_clusters,p, 'Colorbar', 'true', 'ShowAllTicks', true);
+        title('0 Lag Pair-Wise Correlation Matrix'); xlabel('Clusters'); ylabel('Clusters');
+        saveas(h, [new_directory slash 'pairwisecorr_0lag.png']);
+        disp('Saved 0 lag pair-wise correlation matrix.');
+        close all;
 %% Cross Correlograms
     % initialize variables
     max_lag = 50e-3;
@@ -91,7 +98,7 @@ function sorting_metric_output = sorting_metrics()
             acor_diff = zeros(bootstrap_num,1);
             for i=1:bootstrap_num
                  cell2_data_rand = cell2_data(randperm(length(cell2_data)));
-                 [x_coeff2, lag] = xcorr(spikes_by_bin(cell1, :), cell2_data_rand, max_lag/bin_size, 'coeff');
+                 [x_coeff2, lag] = xcorr(cell1_data, cell2_data_rand, max_lag/bin_size, 'coeff');
                  acor_diff(i) = mean(abs(x_coeff/max(x_coeff)-x_coeff2/max(x_coeff))); % difference normalized to max normal x_coeff
             end;
             avg_diff = mean(abs(acor_diff));
@@ -118,19 +125,21 @@ function sorting_metric_output = sorting_metrics()
         parfor_progress;
     end
     parfor_progress(0);
-    
-    heatmap(avg_diff_array, active_clusters, active_clusters,[], 'Colorbar', 'true', 'ShowAllTicks', true);
+    %save figure
+    h = heatmap(avg_diff_array, active_clusters, active_clusters,[], 'Colorbar', 'true', 'ShowAllTicks', true);
     title('Mean Difference between XCorr & XCorr with Bootstrapped Cell 2');
     xlabel('Clusters'); ylabel('Clusters');
+    saveas(h, [new_directory slash 'xcorr__diff_with100randomcell2.png']);
+    disp('Saved Difference between XCorr & XCorr with Bootstrapped Cell 2.');
+    close all;
 %% Refractory period violations vector (ISI)
     %   add up each time ISIs are below the absolute refractory period (3 ms)
     %   compute fractional level of contamination
         %initialize variables
             refractory_limit = 3e-3;
-            parfor_progress(max(spike_clusters));
             violations = [];
         %loop through clusters
-            parfor i=1:max(spike_clusters)
+            for i=1:max(spike_clusters)
                 %get spike times in cluster
                     cluster_spikes = double(spike_times(find(spike_clusters==i)))./double(sampling_rate); % now in seconds
                     clusters(i) = numel(cluster_spikes);
@@ -153,15 +162,30 @@ function sorting_metric_output = sorting_metrics()
                         end
                     end
                     violations(i) = violation_counter;
-                parfor_progress(i);
             end
-            violations = violations(find(violations>-1));
-            uf = uifigure;
-            t = uitable(uf,'Data',horzcat(active_clusters, violations'));
-            t.ColumnName = {'Cluster','Violations'};
-            parfor_progress(0);
+            %output zscore bar graph
+            violations = violations(find(violations>-1))';
+            clusters = clusters(find(clusters>0))';
+            violations_per_event_rate = violations./clusters;
+            violations_per_event_rate_z = zscore(violations_per_event_rate);
+            clf;
+            f = bar(violations_per_event_rate_z);
+            axis([0 numel(violations) 0 inf]);
+            xlabel('Clusters');
+            ylabel('ISI Violation/Event (+ZScores)');
+            title('ISI Refractory Violations per Event (only + ZScores)');
+            xlabel('Clusters'); ylabel('Clusters');
+            saveas(f, [new_directory slash 'isi__refractory_violations_per_event.png']);
+            disp('Saved ISI violations per event.');
+            close all;
     %% Autocorrelation; false positive matrix
         %   false positive matrix
         %   measure size of valley; DeWeese says good neurons have big valleys
         %   smooth with gaussian & measure with width at half max
+        
+        % width
+        % first vs 2nd half -- drift
+        
+ %% avg firing rate changing over time
+ 
 end
