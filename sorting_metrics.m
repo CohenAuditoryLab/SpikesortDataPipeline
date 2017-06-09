@@ -166,18 +166,20 @@ function sorting_metric_output = sorting_metrics()
             %output zscore bar graph
             violations = violations(find(violations>-1))';
             clusters = clusters(find(clusters>0))';
-            violations_per_event_rate = violations./clusters;
+            violations_per_event_rate = violations./clusters';
             violations_per_event_rate_z = zscore(violations_per_event_rate);
             close all;
+            figure;
             f = bar(violations_per_event_rate_z);
+            a = gca; a.XTick = 1:30;
             axis([0 numel(violations) 0 inf]);
             xlabel('Clusters');
+            xticklabels(active_clusters);
             ylabel('ISI Violation/Event (+ZScores)');
             title('ISI Refractory Violations per Event (only + ZScores)');
-            xlabel('Clusters'); ylabel('Clusters');
             saveas(f, [new_directory slash 'isi__refractory_violations_per_event.png']);
             disp('Saved ISI violations per event.');
-            close all;
+            %close all;
     %% Autocorrelation; false positive matrix
         %   false positive matrix
         %   measure size of valley; DeWeese says good neurons have big valleys
@@ -210,13 +212,29 @@ function sorting_metric_output = sorting_metrics()
                  xticklabels(5:5:50);
                  saveas(f, [auto_directory slash ['autocorr_cluster' num2str(active_clusters(i)) '.png']]);
                  close all;
+                 %NOTE: I must come up with a way of measuring the width of
+                 %the valley in autocorrelograms!!!
+                 
+                 % difference between autocorr of 1st half & 2nd half
+                 first_half = cell_data(1:round(numel(cell_data)/2));
+                 second_half = cell_data(round(numel(cell_data)/2)+1:end);
+                 [first_coeff, lag] = xcorr(first_half, first_half, lag_units, 'coeff');
+                 [second_coeff, lag] = xcorr(second_half, second_half, lag_units, 'coeff');
+                 autocorr_diff(i) = sum((first_coeff - second_coeff).^2) % sum of squared difference
                  parfor_progress;
-                 % generate autocorrelogram per active cluster
             end
             parfor_progress(0);
+            
+            %save autocorr diff figure
+            f = bar(autocorr_diff);
+            axis([0 numel(autocorr_diff) 0 inf]);
+            a = gca; a.XTick = 1:30;xticklabels(active_clusters);
+            xlabel('Clusters');
+            ylabel('Sum Squared Difference between 1st & 2nd Half Autocorrelation');
+            title('Sum Squared Difference between 1st & 2nd Half Autocorrelation');
+            saveas(f, [new_directory slash 'autocorr_diff_halves.png']);
+            
             disp('Saved cluster autocorrelograms.');
-        % width
-        % first vs 2nd half -- drift
         
  %% avg firing rate changing over time
  
