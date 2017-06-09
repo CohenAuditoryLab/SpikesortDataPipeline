@@ -168,7 +168,7 @@ function sorting_metric_output = sorting_metrics()
             clusters = clusters(find(clusters>0))';
             violations_per_event_rate = violations./clusters;
             violations_per_event_rate_z = zscore(violations_per_event_rate);
-            clf;
+            close all;
             f = bar(violations_per_event_rate_z);
             axis([0 numel(violations) 0 inf]);
             xlabel('Clusters');
@@ -183,6 +183,38 @@ function sorting_metric_output = sorting_metrics()
         %   measure size of valley; DeWeese says good neurons have big valleys
         %   smooth with gaussian & measure with width at half max
         
+        % initialize variables
+            max_lag = 50e-3;
+            lag_units = max_lag/bin_size;
+        % make auto directory 
+        auto_directory = [new_directory slash 'autocorrelations'];
+        if 7~=exist(auto_directory, 'dir')
+            mkdir(auto_directory);
+        end
+        % loop through active clusters
+            disp('Generating autocorrelograms for clusters.');
+            parfor_progress(numel(active_clusters));
+            parfor i=1:numel(active_clusters)
+                % generate autocorrelogram per active cluster
+                cell_data = spikes_by_bin(i, :);
+                [x_coeff, lag] = xcorr(cell_data, cell_data, lag_units, 'coeff');
+                x_coeff(numel(x_coeff)/2+0.5) = 0; %replace lag of 0 with value of 0 instead of 1
+                 figure;
+                 f = plot(lag, x_coeff);
+                 title(['AutoCorrelelogram' char(10) '(Cluster ' num2str(active_clusters(i)) ')']);
+                 a3 = gca;
+                 a3.XTickLabel = a3.XTick*5;
+                 xlabel('Lag (ms)');
+                 ylabel('R value');
+                 xlim([1 10]);
+                 xticklabels(5:5:50);
+                 saveas(f, [auto_directory slash ['autocorr_cluster' num2str(active_clusters(i)) '.png']]);
+                 close all;
+                 parfor_progress;
+                 % generate autocorrelogram per active cluster
+            end
+            parfor_progress(0);
+            disp('Saved cluster autocorrelograms.');
         % width
         % first vs 2nd half -- drift
         
