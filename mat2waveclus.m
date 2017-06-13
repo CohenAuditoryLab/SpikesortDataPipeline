@@ -1,7 +1,8 @@
 function mat2waveclus
 
 path = uigetdir();
-load(path);
+cd(path);
+load data_for_bk;
 
 %define data
 data_temp = data.streams.NRaw.data;

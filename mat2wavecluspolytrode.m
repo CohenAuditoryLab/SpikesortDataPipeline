@@ -1,7 +1,8 @@
 function mat2wavecluspolytrode
 
 path = uigetdir();
-load(path);
+cd(path);
+load data_for_bk;
 
 %data is opened 
 temp_data = data.streams.NRaw.data;
