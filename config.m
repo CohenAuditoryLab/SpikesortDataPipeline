@@ -1,4 +1,5 @@
-%% options for processing and progress
+%config  Build the structure of options (ops) for a KiloSort simulation.
+
 ops.GPU         = 1; % whether to run this code on an Nvidia GPU	
 ops.parfor      = 0; % whether to use parfor to accelerate parts of algorithm		
 ops.verbose     = 1; % whether to print command line progress		
@@ -11,12 +12,9 @@ ops.fproc    = fullfile(fpath, 'temp_wh.dat'); % residual of RAM of preprocessed
 ops.root     = fpath; % 'openEphys' only: where raw files are		
 
 %% options for channels and clustering
-ops.fs       = 25000; % sampling rate (omit if already in chanMap file)
-ops.NchanTOT = 32; % total number of channels (omit if already in chanMap file)
-ops.Nchan    = 32; % number of active channels (omit if already in chanMap file)
-ops.Nfilt    = 64; % number of clusters to use (2-4x more than Nchan, multiple of 32)     		
-ops.nNeighPC = 12; % visual only (Phy): num channels to mask the PCs		
-ops.nNeigh   = 16; % visual only (Phy): num neighbor templates to retain projections of		
+ops.Nfilt    = 192; % number of clusters to use (2-4x more than Nchan, multiple of 32)     		
+ops.nNeighPC = 12;  % visual only (Phy): num channels to mask the PCs		
+ops.nNeigh   = 16;  % visual only (Phy): num neighbor templates to retain projections of		
 		
 % options for channel whitening		
 ops.whitenin = 'full'; % type of whitening		
