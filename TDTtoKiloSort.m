@@ -20,8 +20,9 @@ tic; % start timer
 createChannelMapFile(fpath) % create and save file in specified location
 
 % format raw TDT data
-data = TDT2mat(tank, block, varargin); % extract data from tank file
-rData = data.streams.NRaw.data; % n x m matrix, n = num electrodes, m = timesteps
+data = TDT2mat(blockpath,'TYPE',{'streams'}); % extract data from tank file
+rData = data.streams.xdi2.data; % n x m matrix, n = num electrodes + 6, m = times
+rData = rData(1:end-6,:); % remove 6 analog controls, leaving just electrodes
 
 % store formatted data
 fidW = fopen(fullfile(fpath, 'sim_binary.dat'), 'w');
