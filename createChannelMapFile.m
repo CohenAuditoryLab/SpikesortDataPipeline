@@ -5,11 +5,11 @@ Nchannels   = 64;
 connected   = true(Nchannels, 1);
 chanMap     = 1:Nchannels;
 chanMap0ind = chanMap - 1;
-xcoords     = ones(Nchannels,1); % all channels in same x-coord
-ycoords     = ones(Nchannels,1); % all channels in same y-coord
-kcoords     = ones(Nchannels,1); % grouping of channels (i.e. tetrode groups)
+xcoords     = ones(1,Nchannels); % all channels in same x-coord
+ycoords     = ones(1,Nchannels); % all channels in same y-coord
+kcoords     = ones(1,Nchannels); % grouping of channels (i.e. tetrode groups)
 
-fs = 25000; % sampling frequency
+fs = 24414; % sampling frequency
 
 save(fullfile(fpath, 'chanMap.mat'), ...
     'chanMap','connected', 'xcoords', 'ycoords', 'kcoords', 'chanMap0ind','fs')
