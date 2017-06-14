@@ -12,12 +12,12 @@ ops.fproc    = fullfile(fpath, 'temp_wh.dat'); % residual of RAM of preprocessed
 ops.root     = fpath; % 'openEphys' only: where raw files are		
 
 %% options for channels and clustering
-ops.Nfilt    = 192; % number of clusters to use (2-4x more than Nchan, multiple of 32)     		
+ops.Nfilt    = 128; % number of clusters to use (2-4x more than Nchan, multiple of 32)     		
 ops.nNeighPC = 12;  % visual only (Phy): num channels to mask the PCs		
 ops.nNeigh   = 16;  % visual only (Phy): num neighbor templates to retain projections of		
 		
 % options for channel whitening		
-ops.whitenin = 'full'; % type of whitening		
+ops.whitening = 'full'; % type of whitening		
 ops.nSkipCov = 1; % compute whitening matrix from every N-th batch (1)		
 ops.whiteningRange = 32; % how many channels to whiten together		
 		
@@ -64,4 +64,5 @@ ops.wPCA = dd.Wi(:,1:7);          % PCs
 		
 %% options for posthoc merges (under construction)
 ops.fracse = 0.1; % binning step along discriminant axis for posthoc merges (in units of sd)
+ops.epu = Inf;
 ops.ForceMaxRAMforDat = 20e9; % max RAM the algorithm will try to use; will autodetect on Windows
