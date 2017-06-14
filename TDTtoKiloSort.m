@@ -1,4 +1,7 @@
 function TDTtoKiloSort(tank, block, varargin)
+%TDTtoKiloSort  Run a KiloSort simulation using TDT data.
+%   TDTtoKiloSort(tank,block) runs KiloSort on the block (string) in the tank
+%   file (string).
 
 % specify location to store data files for this simulation
 fpath = 'C:\work\Spikes\TDTtoKiloSort\';
@@ -11,13 +14,14 @@ pathToYourConfigFile = 'C:\work\TDTtoKiloSort'; % path to the config file
 % run the config file to build the structure of options (ops)
 run(fullfile(pathToYourConfigFile, 'config.m'))
 
-if ops.GPU, gpuDevice(1); end %#ok initialize GPU
+if ops.GPU, gpuDevice(1); end % initialize GPU
 tic; % start timer
+
+createChannelMapFile(fpath) % create and save file in specified location
 
 % format raw TDT data
 data = TDT2mat(tank, block, varargin); % extract data from tank file
 rData = data.streams.NRaw.data; % n x m matrix, n = num electrodes, m = timesteps
-ops.fs = data.streams.NRaw.fs; % set sampling rate
 
 % store formatted data
 fidW = fopen(fullfile(fpath, 'sim_binary.dat'), 'w');
