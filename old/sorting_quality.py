@@ -55,16 +55,19 @@ def ismember(a, b):
 ##===============================================================================    
 
 def ISIviolations(spikeTrain, minISI, refDur):
-    #modified from cortex-lab/sortingQuality GitHub by nick s. 
-    isis = np.diff(spikeTrain)
-    nSpikes = len(spikeTrain)
-    numViolations = sum(isis<refDur) 
-    violationTime = 2*nSpikes*(refDur-minISI)
-    totalRate = nSpikes/(spikeTrain[-1] - spikeTrain[0])
-    violationRate = numViolations/violationTime
-    fpRate = violationRate/totalRate
-    if fpRate > 1.:
-        fpRate = 1. # it is nonsense to have a rate > 1; a rate > 1 means the assumputions of this analysis are failing
+    #modified from cortex-lab/sortingQuality GitHub by nick s.
+    try:
+        isis = np.diff(spikeTrain)
+        nSpikes = len(spikeTrain)
+        numViolations = sum(isis<refDur) 
+        violationTime = 2*nSpikes*(refDur-minISI)
+        totalRate = nSpikes/(spikeTrain[-1] - spikeTrain[0])
+        violationRate = numViolations/violationTime
+        fpRate = violationRate/totalRate
+        if fpRate > 1.:
+            fpRate = 1. # it is nonsense to have a rate > 1; a rate > 1 means the assumputions of this analysis are failing
+    except:
+        fpRate= 1.0;numViolations=np.nan
     return fpRate, numViolations
 
 def isiViolations(directory,time_limits=None,isi=.002,min_isi=.0005):
@@ -91,17 +94,20 @@ def isiViolations(directory,time_limits=None,isi=.002,min_isi=.0005):
     isiV = np.zeros(np.shape(cluster_IDs)[0])
     for i,cluster_ID in enumerate(cluster_IDs):
         all_spikes = spike_times[np.where(spike_clusters==cluster_ID)[0]].flatten()
-        spikes = all_spikes[np.where(all_spikes > time_limits[0])[0][0]:np.where(all_spikes < time_limits[1])[0][-1]]
-        (fp_rate, num_violations) = ISIviolations(spikes,min_isi,isi)
-        #print fp_rate
-        isiV[i] = fp_rate
-        n_spikes = len(spikes)
+        try:
+            spikes = all_spikes[np.where(all_spikes > time_limits[0])[0][0]:np.where(all_spikes < time_limits[1])[0][-1]]
+            (fp_rate, num_violations) = ISIviolations(spikes,min_isi,isi)
+            #print fp_rate
+            isiV[i] = fp_rate
+            n_spikes = len(spikes)
+        except:
+            isiV[i] = 1.0
         print '\rcluster '+str(cluster_ID)+': '+str(num_violations)+' violations ('+str(n_spikes)+' spikes), '+str(fp_rate)+' estimated FP rate',
     
     return cluster_IDs,isiV
     
 
-def masked_cluster_quality(directory,time_limits=None,n_fet=3):
+def masked_cluster_quality(directory,time_limits=None,n_fet=3,minimum_number_of_spikes=10):
     pc_features_path = os.path.join(directory,'pc_features.npy')
     pc_features_ind_path = os.path.join(directory,'pc_feature_ind.npy')
     spike_clusters_path = os.path.join(directory,'spike_clusters.npy')
@@ -136,25 +142,28 @@ def masked_cluster_quality(directory,time_limits=None,n_fet=3):
         for i,cluster_ID in enumerate(cluster_IDs):
             #get the templates for this unit:
             all_spikes = spike_times[np.where(spike_clusters==cluster_ID)[0]].flatten()
-            these_spikes = np.where(spike_clusters == cluster_ID)[0][np.where(all_spikes > time_limits[0])[0][0]:np.where(all_spikes < time_limits[1])[0][-1]]
-            these_templates = spike_templates[these_spikes]
-            
-            #count the templates in this unit and their frequency of occurence:
-            (included_templates,instances) = count_unique(these_templates)
-
-            #use the template that occurs most frequently:
-            this_template = included_templates[np.where(instances==np.max(instances))[0]]
-            these_chans = pc_feature_ind[this_template,:n_fet]
-            new_fet_inds[i,:] = these_chans
-            
-            for f in range(n_fet):
-                (temps_with_this_chan,chan_inds) = np.where(pc_feature_ind==these_chans[f])
-                included_templates_with_this_fet = ismember(included_templates,temps_with_this_chan)
-                for t in range(len(included_templates_with_this_fet)):
-                    #print str(t)+'  '+str(included_templates)+'    '+str(included_templates_with_this_fet)+'  '+str(included_templates_with_this_fet[t])
-                    this_sub_temp = temps_with_this_chan[included_templates_with_this_fet[t]]
-                    this_T_fet_ind = chan_inds[np.where(temps_with_this_chan==this_sub_temp)[0][0]]
-                    new_fet[np.where(these_spikes==this_sub_temp)[0],:,f] = pc_features[np.where(these_spikes==this_sub_temp)[0],:,this_T_fet_ind]
+            #make sure we have at least one spike in the time window
+            if np.min(all_spikes) < time_limits[1] and np.max(all_spikes) > time_limits[0]:
+                #make sure we have more than the specified minimum number of spikes in the time window
+                if np.shape(np.where(spike_clusters == cluster_ID)[0][np.where(all_spikes > time_limits[0])[0][0]:np.where(all_spikes < time_limits[1])[0][-1]])[0] > minimum_number_of_spikes:
+                    these_spikes = np.where(spike_clusters == cluster_ID)[0][np.where(all_spikes > time_limits[0])[0][0]:np.where(all_spikes < time_limits[1])[0][-1]]
+                    these_templates = spike_templates[these_spikes]
+                    #count the templates in this unit and their frequency of occurence:
+                    (included_templates,instances) = count_unique(these_templates)
+                    #use the template that occurs most frequently:
+                    this_template = included_templates[np.where(instances==np.max(instances))[0][0]]
+        
+                    these_chans = pc_feature_ind[this_template,:n_fet]
+                    new_fet_inds[i,:] = these_chans
+    
+                    for f in range(n_fet):
+                        (temps_with_this_chan,chan_inds) = np.where(pc_feature_ind==these_chans[f])
+                        included_templates_with_this_fet = ismember(included_templates,temps_with_this_chan)
+                        for t in range(len(included_templates_with_this_fet)):
+                            #print str(t)+'  '+str(included_templates)+'    '+str(included_templates_with_this_fet)+'  '+str(included_templates_with_this_fet[t])
+                            this_sub_temp = temps_with_this_chan[included_templates_with_this_fet[t]]
+                            this_T_fet_ind = chan_inds[np.where(temps_with_this_chan==this_sub_temp)[0][0]]
+                            new_fet[np.where(these_spikes==this_sub_temp)[0],:,f] = pc_features[np.where(these_spikes==this_sub_temp)[0],:,this_T_fet_ind]
 
 #         pc_features = new_fet
 #         pc_feature_ind = new_fet_inds
@@ -174,31 +183,37 @@ def masked_cluster_quality_sparse(spike_clusters,pc_features,pc_feature_ind,spik
     cluster_IDs = np.unique(spike_clusters)
     unit_quality = np.zeros(len(cluster_IDs))
     contamination_rate = np.zeros(len(cluster_IDs))
-    
+    print np.shape(unit_quality)
     if time_limits == None:
         time_limits=[0,1e7]
         
     for i,cluster_ID in enumerate(cluster_IDs):
-        all_spikes = spike_times[np.where(spike_clusters==cluster_ID)[0]].flatten()
-        these_spikes = np.where(spike_clusters==cluster_ID)[0][np.where(all_spikes > time_limits[0])[0][0]:np.where(all_spikes < time_limits[1])[0][-1]]
-        n_spikes_in_cluster = len(these_spikes)
-        if n_spikes_in_cluster < fet_n_chans or n_spikes_in_cluster > N/2.:
-            unit_quality[i] = 0;
-            contamination_rate[i] =np.nan;
-        else:
-            fet_this_cluster = pc_features[these_spikes,:n_fet,:fet_n_chans]#.reshape((len(these_spikes),-1))
-            #print 'this cluster PCs: '+str(np.shape(fet_this_cluster))
-            this_cluster_chans = pc_feature_ind[i,:fet_n_chans]
-            other_clusters_IDs = []
-            fet_other_clusters = []
-            for ii,cluster_2 in enumerate(cluster_IDs):
-                if cluster_2 != cluster_ID:
-                    cluster_2_chans = pc_feature_ind[ii]
-                    fet_cluster2 = np.zeros(np.shape(fet_this_cluster))
-                    if sum(np.in1d(this_cluster_chans,cluster_2_chans)) == len(cluster_2_chans):#any(i in cluster_2_chans for i in this_cluster_chans):#
+        try:
+            all_spikes = spike_times[np.where(spike_clusters==cluster_ID)[0]].flatten()
+            these_spikes = np.where(spike_clusters==cluster_ID)[0][np.where(all_spikes > time_limits[0])[0][0]:np.where(all_spikes < time_limits[1])[0][-1]]
+            n_spikes_in_cluster = len(these_spikes)
+            if n_spikes_in_cluster < fet_n_chans or n_spikes_in_cluster > N/2.:
+                unit_quality[i] = 0;
+                contamination_rate[i] =np.nan;
+            else:
+                fet_this_cluster = pc_features[these_spikes,:n_fet,:fet_n_chans]#.reshape((len(these_spikes),-1))
+                #print 'this cluster PCs: '+str(np.shape(fet_this_cluster))
+                this_cluster_chans = pc_feature_ind[i,:fet_n_chans]
+                other_clusters_IDs = []
+                fet_other_clusters = []
+                for ii,cluster_2 in enumerate(cluster_IDs):
+                    if cluster_2 != cluster_ID:
+                        cluster_2_chans = pc_feature_ind[ii]
+                        fet_cluster2 = np.zeros(np.shape(fet_this_cluster))
+                        #print sum(np.in1d(this_cluster_chans,cluster_2_chans))
+                        #print len(cluster_2_chans)
+                        #print cluster_2_chans
+                        #print this_cluster_chans
+                        #if sum(np.in1d(this_cluster_chans,cluster_2_chans)) == len(cluster_2_chans):#any(i in cluster_2_chans for i in this_cluster_chans):#
                         #print str(cluster_2)+' | '+str(cluster_ID)
                         cluster_2_ind = np.ones(fet_n_chans) * -1
                         other_clusters_IDs.extend([cluster_2])
+                        #print this_cluster_chans
                         for c,chan in enumerate(this_cluster_chans):
                             if chan in cluster_2_chans:
                                 cluster_2_ind[c]=np.where(chan==cluster_2_chans)[0][0]
@@ -206,24 +221,32 @@ def masked_cluster_quality_sparse(spike_clusters,pc_features,pc_feature_ind,spik
                                     fet_cluster2[:,f,c] = pc_features[these_spikes,f,np.where(chan==cluster_2_chans)[0][0]]
                             else:
                                 cluster_2_ind[c]=np.nan
-                        #cluster_2_ind = np.where(np.in1d(this_cluster_chans,cluster_2_chans))[0]
-                        #print 'other cluster PCs: '+str(np.shape(fet_cluster2))
-                        #fet_cluster2 = pc_features[these_spikes,:,:cluster_2_ind].reshape((len(these_spikes),-1))
-                        fet_other_clusters.extend(fet_cluster2)
-                        
-                        #other_clusters_IDs.extend([cluster_2])
-            #other_clusters_indices = np.nonzero(np.in1d(spike_clusters,np.array(other_clusters_IDs).flatten()))[0]
-            #print np.shape(other_clusters_indices)
-            print np.shape(fet_other_clusters)
-            fet_other_clusters = np.array(fet_other_clusters).reshape((np.shape(fet_other_clusters)[0],-1))
-            fet_this_cluster = fet_this_cluster.reshape((len(these_spikes),-1))
-            #fet_other_clusters=pc_features[other_clusters_indices,:,:fet_n_chans]#.reshape((np.shape(other_clusters_indices)[0],-1))
-            unit_quality[i],contamination_rate[i] = masked_cluster_quality_core(fet_this_cluster,fet_other_clusters)
+                            #cluster_2_ind = np.where(np.in1d(this_cluster_chans,cluster_2_chans))[0]
+                            #print 'other cluster PCs: '+str(np.shape(fet_cluster2))
+                            #fet_cluster2 = pc_features[these_spikes,:,:cluster_2_ind].reshape((len(these_spikes),-1))
+                            fet_other_clusters.extend(fet_cluster2)
+                            
+                            #other_clusters_IDs.extend([cluster_2])
+                #other_clusters_indices = np.nonzero(np.in1d(spike_clusters,np.array(other_clusters_IDs).flatten()))[0]
+                #print np.shape(other_clusters_indices)
+                
+                #djd: uncomment for sparse matrix debugging
+                #print np.shape(fet_other_clusters)
+                #print np.shape(fet_this_cluster)
+                
+                
+                fet_other_clusters = np.array(fet_other_clusters).reshape((np.shape(fet_other_clusters)[0],-1))
+                fet_this_cluster = fet_this_cluster.reshape((len(these_spikes),-1))
+                #fet_other_clusters=pc_features[other_clusters_indices,:,:fet_n_chans]#.reshape((np.shape(other_clusters_indices)[0],-1))
+                unit_quality[i],contamination_rate[i] = masked_cluster_quality_core(fet_this_cluster,fet_other_clusters)
+        except:
+            unit_quality[i] = 0;
+            contamination_rate[i] =np.nan;
             
         print '\rcluster '+str(cluster_ID)+' ('+str(np.shape(fet_this_cluster)[0])+'): '+str(unit_quality[i])+' '+str(contamination_rate[i]),
     return cluster_IDs,unit_quality,contamination_rate
 
-def masked_cluster_quality_core(fet_this_cluster,fet_other_clusters,point_limit=20000000):
+def masked_cluster_quality_core(fet_this_cluster,fet_other_clusters,point_limit=20000000,plots=False):
     n = np.shape(fet_this_cluster)[0]
     n_other = np.shape(fet_other_clusters)[0]
     n_fet = np.shape(fet_this_cluster)[1]
@@ -243,15 +266,16 @@ def masked_cluster_quality_core(fet_this_cluster,fet_other_clusters,point_limit=
                                  fet_this_cluster,
                                  'mahalanobis')[0])
         #print fet_this_cluster.mean(0).reshape(1,fet_this_cluster.shape[1])
-        plt.figure()
-        plt.plot(fet_this_cluster[:,0],fet_this_cluster[:,1],'r.')
-        plt.plot(fet_other_clusters[:n,0],fet_other_clusters[:n,1],'b.')
-        plt.plot(fet_this_cluster.mean(0).reshape(1,fet_this_cluster.shape[1])[0][0],fet_this_cluster.mean(0).reshape(1,fet_this_cluster.shape[1])[0][1],'*',color='#ffcccc',ms=12)
-        #
-        plt.figure()
-        plt.hist(md[:n],bins=100,range=(0,10),color='b')
-        plt.hist(md_self,bins=100,range=(0,10),color='r')
-        plt.title('iso: '+str(np.max(md[:n])))
+        if plots:
+            plt.figure()
+            plt.plot(fet_this_cluster[:,0],fet_this_cluster[:,1],'r.')
+            plt.plot(fet_other_clusters[:n,0],fet_other_clusters[:n,1],'b.')
+            plt.plot(fet_this_cluster.mean(0).reshape(1,fet_this_cluster.shape[1])[0][0],fet_this_cluster.mean(0).reshape(1,fet_this_cluster.shape[1])[0][1],'*',color='#ffcccc',ms=12)
+            #
+            plt.figure()
+            plt.hist(md[:n],bins=100,range=(0,10),color='b')
+            plt.hist(md_self,bins=100,range=(0,10),color='r')
+            plt.title('iso: '+str(np.max(md[:n])))
         unit_quality = np.max(md[:n])
         contamination_rate = 1 - (tipping_point(md_self,md) / float(len(md_self)))
     else:
@@ -286,35 +310,67 @@ def tipping_point(x,y):
 
 
 def plot_quality(quality,isiV,(good,mua,unsorted)):
-    f,ax = plt.subplots(3,1,figsize=(4,6));
-    ax[0].plot(quality[1][np.where(np.in1d(quality[0],good))[0]],quality[2][np.where(np.in1d(quality[0],good))[0]],'o',label='good',mfc='None',mec='g');#plt.ylim(0,1)
-    ax[0].plot(quality[1][np.where(np.in1d(quality[0],mua))[0]],quality[2][np.where(np.in1d(quality[0],mua))[0]],'o',label='mua',mfc='None',mec='r');#plt.ylim(0,1)
-    ax[0].plot(quality[1][np.where(np.in1d(quality[0],unsorted))[0]],quality[2][np.where(np.in1d(quality[0],unsorted))[0]],'k.',label='unsorted',alpha=0.3);#plt.ylim(0,1)
-    ax[0].set_xlabel('iso distance');ax[0].set_ylabel('contamination from mahal.')
-    ax[0].set_ylim(ymin=0);ax[0].set_xlim(xmin=1.)
+    f,ax = plt.subplots(3,2,figsize=(8,8));
+    ax[0][0].plot(quality[1][np.where(np.in1d(quality[0],good))[0]],quality[2][np.where(np.in1d(quality[0],good))[0]],'o',label='good',mfc='None',mec='g');#plt.ylim(0,1)
+    ax[0][0].plot(quality[1][np.where(np.in1d(quality[0],mua))[0]],quality[2][np.where(np.in1d(quality[0],mua))[0]],'o',label='mua',mfc='None',mec='r');#plt.ylim(0,1)
+    ax[0][0].plot(quality[1][np.where(np.in1d(quality[0],unsorted))[0]],quality[2][np.where(np.in1d(quality[0],unsorted))[0]],'k.',label='unsorted',alpha=0.3);#plt.ylim(0,1)
+    ax[0][0].set_xlabel('iso distance');ax[0][0].set_ylabel('contamination from mahal.')
+    ax[0][0].set_ylim(ymin=0);ax[0][0].set_xlim(xmin=1.)
     # if np.max(quality[1]) > 20:
     #     ax[0].set_xlim(1,20)
-    legend = ax[0].legend(loc='upper right', shadow=False, fontsize=10,numpoints=1)
+    legend = ax[0][0].legend(loc='upper right', shadow=False, fontsize=10,numpoints=1)
 
-    ax[1].plot(quality[1][np.where(np.in1d(quality[0],good))[0]],isiV[1][np.where(np.in1d(isiV[0],good))[0]],'o',label='good',mfc='None',mec='g');plt.ylim(0,1)
-    ax[1].plot(quality[1][np.where(np.in1d(quality[0],mua))[0]],isiV[1][np.where(np.in1d(isiV[0],mua))[0]],'o',label='mua',mfc='None',mec='r');plt.ylim(0,1)
-    ax[1].plot(quality[1][np.where(np.in1d(quality[0],unsorted))[0]],isiV[1][np.where(np.in1d(isiV[0],unsorted))[0]],'k.',label='unsorted',alpha=0.3);plt.ylim(0,1)
-    ax[1].set_xlabel('iso distance');ax[1].set_ylabel('isi contamination')
-    ax[1].set_ylim(ymin=0);ax[1].set_xlim(xmin=1.)
+    ax[1][0].plot(quality[1][np.where(np.in1d(quality[0],good))[0]],isiV[1][np.where(np.in1d(isiV[0],good))[0]],'o',label='good',mfc='None',mec='g');plt.ylim(0,1)
+    ax[1][0].plot(quality[1][np.where(np.in1d(quality[0],mua))[0]],isiV[1][np.where(np.in1d(isiV[0],mua))[0]],'o',label='mua',mfc='None',mec='r');plt.ylim(0,1)
+    ax[1][0].plot(quality[1][np.where(np.in1d(quality[0],unsorted))[0]],isiV[1][np.where(np.in1d(isiV[0],unsorted))[0]],'k.',label='unsorted',alpha=0.3);plt.ylim(0,1)
+    ax[1][0].set_xlabel('iso distance');ax[1][0].set_ylabel('isi contamination')
+    ax[1][0].set_ylim(ymin=0);ax[1][0].set_xlim(xmin=1.)
     # if np.max(quality[1]) > 20:
     #     ax[1].set_xlim(1,20)
-    legend = ax[1].legend(loc='upper right', shadow=False, fontsize=10,numpoints=1)
+    legend = ax[1][0].legend(loc='upper right', shadow=False, fontsize=10,numpoints=1)
 
-    ax[2].plot(quality[2][np.where(np.in1d(quality[0],good))[0]],isiV[1][np.where(np.in1d(isiV[0],good))[0]],'o',label='good',mfc='None',mec='g');plt.ylim(0,1)
-    ax[2].plot(quality[2][np.where(np.in1d(quality[0],mua))[0]],isiV[1][np.where(np.in1d(isiV[0],mua))[0]],'o',label='mua',mfc='None',mec='r');plt.ylim(0,1)
-    ax[2].plot(quality[2][np.where(np.in1d(quality[0],unsorted))[0]],isiV[1][np.where(np.in1d(isiV[0],unsorted))[0]],'k.',label='unsorted',alpha=0.3);plt.ylim(0,1)
-    ax[2].set_ylabel('isi contamination');ax[2].set_xlabel('contamination from mahal.')
-    ax[2].set_ylim(ymin=0);ax[2].set_xlim(xmin=0)
+    ax[2][0].plot(quality[2][np.where(np.in1d(quality[0],good))[0]],isiV[1][np.where(np.in1d(isiV[0],good))[0]],'o',label='good',mfc='None',mec='g');plt.ylim(0,1)
+    ax[2][0].plot(quality[2][np.where(np.in1d(quality[0],mua))[0]],isiV[1][np.where(np.in1d(isiV[0],mua))[0]],'o',label='mua',mfc='None',mec='r');plt.ylim(0,1)
+    ax[2][0].plot(quality[2][np.where(np.in1d(quality[0],unsorted))[0]],isiV[1][np.where(np.in1d(isiV[0],unsorted))[0]],'k.',label='unsorted',alpha=0.3);plt.ylim(0,1)
+    ax[2][0].set_ylabel('isi contamination');ax[2][0].set_xlabel('contamination from mahal.')
+    ax[2][0].set_ylim(ymin=0);ax[2][0].set_xlim(xmin=0)
     #legend = ax[2].legend(loc='upper left', shadow=False, fontsize=10,numpoints=1)
     
+    ax[0][1].hist([isiV[1][np.where(np.in1d(quality[0],good))[0]],
+                   isiV[1][np.where(np.in1d(quality[0],mua))[0]],
+                   isiV[1][np.where(np.in1d(quality[0],unsorted))[0]]],
+           range=(0,0.9),bins=20,color=['g','r','k'],
+           stacked=True)
+    #ax[0][1].hist(isiV[1][np.where(np.in1d(quality[0],mua))[0]],range=(0,1),bins=20,color='r')
+    #ax[0][1].hist(isiV[1][np.where(np.in1d(quality[0],unsorted))[0]],range=(0,1),bins=20,color='k',alpha=0.3)
+    ax[0][1].set_ylabel('count')
+    ax[0][1].set_xlabel('isi violation rate')
+    
+    ax[1][1].hist([quality[1][np.where(np.in1d(quality[0],good))[0]],
+                quality[1][np.where(np.in1d(quality[0],mua))[0]],
+                quality[1][np.where(np.in1d(quality[0],unsorted))[0]]],
+                  range=(0,50),bins=20,color=['g','r','k'],
+           stacked=True)
+    #ax[1][1].hist(quality[1][np.where(np.in1d(quality[0],mua))[0]],range=(0,50),bins=20,color='r')
+    #ax[1][1].hist(quality[1][np.where(np.in1d(quality[0],unsorted))[0]],range=(0,50),bins=20,color='k',alpha=0.3)
+    ax[1][1].set_ylabel('count')
+    ax[1][1].set_xlabel('isolation distance')
+    
+    quality[2][quality[2] == np.nan] = 1.5
+    ax[2][1].hist([np.nan_to_num(quality[2][np.where(np.in1d(quality[0],good))[0]]),
+                  np.nan_to_num(quality[2][np.where(np.in1d(quality[0],mua))[0]]),
+                  np.nan_to_num(quality[2][np.where(np.in1d(quality[0],unsorted))[0]])],
+        range=(0,1),bins=20,color=['g','r','k'],
+           stacked=True)
+    
+    #ax[2][1].hist(np.nan_to_num(quality[2][np.where(np.in1d(quality[0],mua))[0]]),range=(0,1),bins=20,color='r')
+    #ax[2][1].hist(np.nan_to_num(quality[2][np.where(np.in1d(quality[0],unsorted))[0]]),range=(0,1),bins=20,color='k',alpha=0.3)
+    ax[2][1].set_ylim(0,40)
+    ax[2][1].set_ylabel('count')
+    ax[2][1].set_xlabel('contamination from mahal.')
+    
     plt.tight_layout()
-
-
+    return plt.gcf()
 
 
 
@@ -585,7 +641,7 @@ def neuron_fig(clusterID,data,datapath,sortpath,site_positions,quality,isiV,time
     ax_position.imshow(data[clusterID]['waveform_weights'][3::4],extent=(site_positions[:,0][3::4][0],site_positions[:,0][3::4][0]+16,site_positions[:,1][3::4][0],site_positions[:,1][3::4][-1]),cmap=plt.cm.gray_r,clim=(0,0.5),interpolation='none')
     ax_position.set_aspect(0.1)
     ax_position.set_ylim(3840,0)
-    ax_position.set_xlim(0,70)
+    ax_position.set_xlim(70,0)
     cleanAxes(ax_position)
     ax_position.set_title('neuron position')
     
@@ -604,13 +660,14 @@ def neuron_fig(clusterID,data,datapath,sortpath,site_positions,quality,isiV,time
 
     #for PC and CCG display, find close by clusters calculate 
     #PC plot
+    number_of_spikes_to_plot = 2000
     these_templates=spike_templates[np.where(cluster_IDs==cluster_ID)[0]]
     (included_templates,instances) = count_unique(these_templates)
     this_template = included_templates[np.where(instances==np.max(instances))[0]]
     ch1 = pc_ind_data[this_template][0]
     ch2 = pc_ind_data[this_template][1]
-    ax_PCs.plot(pc_data[these_spikes][:,0,0],
-             pc_data[these_spikes][:,0,1],'bo',ms=1.5,markeredgewidth=0)
+    ax_PCs.plot(pc_data[these_spikes][:number_of_spikes_to_plot,0,0],
+             pc_data[these_spikes][:number_of_spikes_to_plot,0,1],'bo',ms=1.5,markeredgewidth=0)
     
     nearby_trio = [0,0,0];
     nearby_euclids = [10000,10000,10000];
@@ -620,7 +677,8 @@ def neuron_fig(clusterID,data,datapath,sortpath,site_positions,quality,isiV,time
             if (np.abs(data[clusterID]['ypos']-data[other_cluster]['ypos']) + np.abs(data[clusterID]['xpos']-data[other_cluster]['xpos'])) < nearby_euclids[-1]:
                 rank = np.where((np.abs(data[clusterID]['ypos']-data[other_cluster]['ypos']) + np.abs(data[clusterID]['xpos']-data[other_cluster]['xpos'])) < nearby_euclids)[0][0]
                 nearby_euclids[rank] = (np.abs(data[clusterID]['ypos']-data[other_cluster]['ypos']) + np.abs(data[clusterID]['xpos']-data[other_cluster]['xpos']))
-                nearby_trio[rank]=other_cluster           
+                nearby_trio[rank]=other_cluster
+    print nearby_trio
     for ii,neighbor in enumerate(nearby_trio):
         all_spikes_neighbor = data[neighbor]['times']
         indices_neighbor= np.where(cluster_IDs==int(neighbor))[0][np.where(all_spikes_neighbor > time_limits[0])[0][0]:np.where(all_spikes_neighbor < time_limits[1])[0][-1]]
@@ -632,8 +690,8 @@ def neuron_fig(clusterID,data,datapath,sortpath,site_positions,quality,isiV,time
         ch1_index = np.where(pc_ind_data[this_template] == ch1)[0]
         ch2_index = np.where(pc_ind_data[this_template] == ch2)[0]
         if ch2_index.size != 0 and ch1_index.size != 0:
-            ax_PCs.plot(pc_data[indices_neighbor][:,0,np.where(pc_ind_data[this_template] == ch1)[0][0]],
-                     pc_data[indices_neighbor][:,0,np.where(pc_ind_data[this_template] == ch2)[0][0]],
+            ax_PCs.plot(pc_data[indices_neighbor][:number_of_spikes_to_plot,0,np.where(pc_ind_data[this_template] == ch1)[0][0]],
+                     pc_data[indices_neighbor][:number_of_spikes_to_plot,0,np.where(pc_ind_data[this_template] == ch2)[0][0]],
                      'o',color=neighbor_colors[ii],ms=1,markeredgewidth=0,alpha=0.8)
             
             all_diffs = []
@@ -732,9 +790,9 @@ def neuron_fig(clusterID,data,datapath,sortpath,site_positions,quality,isiV,time
     "%.2f" % signal
     ax_text.text(10, 30, 'amp.: '+"%.2f" % signal+'uV', fontsize=10)
     ax_text.text(10, 60, 'SNR: '+"%.2f" % (signal/noise), fontsize=10)
-    ax_text.text(50, 0, 'isolation distance: '+"%.2f" % quality[1][np.where(quality[0]==int(clusterID))[0][0]], fontsize=10)
-    ax_text.text(50, 30, 'purity [mahalanobis]: '+"%.2f" % quality[2][np.where(quality[0]==int(clusterID))[0][0]], fontsize=10)
-    ax_text.text(50, 60, 'ISI violation rate: '+"%.2f" % isiV[1][np.where(isiV[0]==int(clusterID))[0][0]]+'%', fontsize=10)
+    #ax_text.text(50, 0, 'isolation distance: '+"%.2f" % quality[1][np.where(quality[0]==int(clusterID))[0][0]], fontsize=10)
+    #ax_text.text(50, 30, 'purity [mahalanobis]: '+"%.2f" % quality[2][np.where(quality[0]==int(clusterID))[0][0]], fontsize=10)
+    #ax_text.text(50, 60, 'ISI violation rate: '+"%.2f" % isiV[1][np.where(isiV[0]==int(clusterID))[0][0]]+'%', fontsize=10)
     ax_text.set_ylim(100,0)
     ax_text.set_xlim(0,100)
     
