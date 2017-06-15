@@ -52,7 +52,7 @@ for n = 1:r
 end
 
 disp('Saving final data matrix...');
-save(strcat('clusters_', filename, '.mat'), 'allClusters');
+save(strcat('clusters_', filename), 'allClusters');
 disp('Done!');
 
 end
