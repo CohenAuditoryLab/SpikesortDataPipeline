@@ -6,7 +6,7 @@ connected   = true(Nchannels, 1);
 chanMap     = 1:Nchannels;
 chanMap0ind = chanMap - 1;
 xcoords     = ones(1,Nchannels); % all channels in same x-coord
-ycoords     = ones(1,Nchannels); % all channels in same y-coord
+ycoords     = 1:Nchannels;       % channels spaced evenly along y-axis
 kcoords     = ones(1,Nchannels); % grouping of channels (i.e. tetrode groups)
 
 fs = 24414; % sampling frequency
