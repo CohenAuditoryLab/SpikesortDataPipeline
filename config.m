@@ -12,7 +12,7 @@ ops.fproc    = fullfile(fpath, 'temp_wh.dat'); % residual of RAM of preprocessed
 ops.root     = fpath; % 'openEphys' only: where raw files are
 
 %% options for channels and clustering
-ops.Nfilt    = 192; % number of clusters to use (2-4x more than Nchan, multiple of 32)
+ops.Nfilt    = 128; % number of clusters to use (2-4x more than Nchan, multiple of 32)
 ops.nNeighPC = 12;  % visual only (Phy): num channels to mask the PCs
 ops.nNeigh   = 16;  % visual only (Phy): num neighbor templates to retain projections of
 
