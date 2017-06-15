@@ -1,4 +1,4 @@
-function TDTtoKiloSort(tank, block, varargin)
+function TDTtoKiloSort(blockpath)
 %TDTtoKiloSort  Run a KiloSort simulation using TDT data.
 %   TDTtoKiloSort(tank,block) runs KiloSort on the block (string) in the tank
 %   file (string).
