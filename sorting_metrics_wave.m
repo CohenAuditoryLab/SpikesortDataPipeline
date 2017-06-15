@@ -16,7 +16,6 @@ function sorting_metric_output = sorting_metrics_wave()
         [data_file, file_path] = uigetfile();
         data_directory = file_path;
         data = load([data_directory data_file]);
-        %%
         spike_times = data.cluster_class(data.cluster_class(:,1) ~= 0,2); % get times of active clusters %readNPY([data_directory slash 'spike_times.npy']);
         spike_clusters = data.cluster_class(data.cluster_class(:,1) ~= 0,1); % get times of active clusters %readNPY([data_directory slash 'spike_clusters.npy']);
      % Load rez.mat
@@ -26,7 +25,7 @@ function sorting_metric_output = sorting_metrics_wave()
         disp(sampling_rate);
      % Convert data into spikes by bin by cluster(cell)
         % intialize variables
-        bin_size = 5e-3; % in seconds
+        bin_size = 1e-3; % in seconds
         max_time = double(max(spike_times))/double(sampling_rate);
         num_bins = round(max_time/bin_size) + 1; % add a bin to be safe
         %loop
@@ -211,11 +210,12 @@ function sorting_metric_output = sorting_metrics_wave()
                  f = plot(lag, x_coeff);
                  title(['AutoCorrelelogram' char(10) '(Cluster ' num2str(active_clusters(i)) ')']);
                  a3 = gca;
-                 a3.XTickLabel = a3.XTick*5;
+                 xticklabels(0:bin_size*1000:max_lag*1000);
+                 a3.XTickLabel = a3.XTick*bin_size*1000;
                  xlabel('Lag (ms)');
                  ylabel('R value');
-                 xlim([1 10]);
-                 xticklabels(5:5:50);
+                 xlim([0 lag_units]);
+                 %
                  saveas(f, [auto_directory slash ['autocorr_cluster' num2str(active_clusters(i)) '.png']]);
                  close all;
                  %NOTE: I must come up with a way of measuring the width of
