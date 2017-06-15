@@ -1,15 +1,15 @@
-function TDTtoKiloSort(blockpath)
+function TDTtoKiloSort(fname)
 %TDTtoKiloSort  Run a KiloSort simulation using TDT data.
-%   TDTtoKiloSort(tank,block) runs KiloSort on the block (string) in the tank
-%   file (string).
+%   TDTtoKiloSort(fname) runs KiloSort on the file (string)
 
 % specify location to store data files for this simulation
-fpath = 'C:\work\Spikes\TDTtoKiloSort\';
+fpath = (fullfile('C:\work\datafiles\spikes', fname));
 if ~exist(fpath, 'dir'); mkdir(fpath); end
 
 addpath(genpath('C:\work\KiloSort-master')) % path to kilosort folder
 addpath(genpath('C:\work\phy-master')) % path to npy-matlab scripts
 pathToYourConfigFile = 'C:\work\TDTtoKiloSort'; % path to the config file
+pathToYourDataFile = 'C:\work\datafiles\TDT'; % path to matlab format TDT data
 
 % run the config file to build the structure of options (ops)
 run(fullfile(pathToYourConfigFile, 'config.m'))
@@ -19,10 +19,10 @@ tic; % start timer
 
 createChannelMapFile(fpath) % create and save file in specified location
 
-% format raw TDT data
-data = TDT2mat(blockpath,'TYPE',{'streams'}); % extract data from tank file
-rData = data.streams.xdi2.data; % n x m matrix, n = num electrodes + 6, m = times
-rData = rData(1:end-6,:); % remove 6 analog controls, leaving just electrodes
+% open converted matlab data
+load (fullfile(pathToYourDataFile, [fname,'.mat']))
+data = importdata([fname,'.mat']);
+rData = data.spikes;
 
 % store formatted data
 fidW = fopen(fullfile(fpath, 'sim_binary.dat'), 'w');
