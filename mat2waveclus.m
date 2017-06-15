@@ -21,7 +21,7 @@ sr = data.streams.NRaw.fs;
 index = data.snips.eBxS.ts;
 
 %define matrix for storing all outputs
-allClusters = cell(1,8);
+allClusters = cell(1,4);
 
 for n = 1:r
     data = data_temp(n, :);
