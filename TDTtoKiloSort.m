@@ -41,4 +41,5 @@ delete(ops.fproc); % remove temporary file
 
 % final display of total runtime
 fprintf('KiloSort took %2.2f minutes to run \n', floor(toc/0.6)/100)
+quit
 end
