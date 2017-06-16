@@ -37,7 +37,7 @@ param.detect_fmax = 7000;
 %define matrix for storing all outputs
 allClusters = cell(1,r);
 
-for n = 1:r
+for n = 6:r
     data = data_temp(n, :);
     
     name = strcat(filename, '_channel', num2str(n));
