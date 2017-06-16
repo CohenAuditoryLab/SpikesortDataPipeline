@@ -142,7 +142,8 @@ function sorting_metric_output = sorting_metrics_wave()
     %   compute fractional level of contamination
         %initialize variables
             refractory_limit = 3e-3;
-            violations = [];
+            violations = zeros(max(spike_clusters),1);
+            clusters = zeros(max(spike_clusters),1);
         %loop through clusters
             for i=1:max(spike_clusters)
                 %get spike times in cluster
@@ -167,11 +168,24 @@ function sorting_metric_output = sorting_metrics_wave()
                         end
                     end
                     violations(i) = violation_counter;
+                % output ISI distribution
+                g = figure;
+                histogram(diff(cluster_spikes), 'BinWidth', 0.001, 'BinLimits', [0 0.1]);
+                yticks = get(gca,'YTick'); yticks = yticks(find(yticks==floor(yticks)));
+                set(gca, 'YTick', yticks);
+                set(gca, 'XTickLabel', 0:10:100);
+                title('ISI Distribution to 100 ms'); ylabel('Number of Occurrences'); xlabel('ISI (ms)');
+                % make ISI
+                isi_directory = [new_directory slash 'isi_distributions'];
+                if 7~=exist(isi_directory, 'dir') mkdir(isi_directory); end
+                saveas(g, [isi_directory slash 'isi__distribution_' num2str(active_clusters(i)) '.png']); close all;
             end
-            %output zscore bar graph
+            disp('Saved ISI distributions.');
+            close all;
+            %output bar graph
             violations = violations(find(violations>-1))';
             clusters = clusters(find(clusters>0))';
-            violations_per_event_rate = violations./clusters';
+            violations_per_event_rate = violations./clusters;
             %violations_per_event_rate_z = zscore(violations_per_event_rate);
             close all;
             figure;
@@ -180,10 +194,10 @@ function sorting_metric_output = sorting_metrics_wave()
             axis([0 numel(violations) 0 inf]);
             xlabel('Clusters');
             xticklabels(active_clusters);
-            ylabel('ISI Violation/Event');
-            title('ISI Refractory Violations per Event ');
-            saveas(f, [new_directory slash 'isi__refractory_violations_per_event.png']);
-            disp('Saved ISI violations per event.');
+            ylabel('ISI Violations/Spikes');
+            title('ISI Refractory Violations per Spike Rate');
+            saveas(f, [new_directory slash 'isi__refractory_violations_per_spike.png']); close all;
+            disp('Saved ISI violations per spike rate.');
             %close all;
     %% Autocorrelation; false positive matrix
         %   false positive matrix
