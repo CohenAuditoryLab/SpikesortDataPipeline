@@ -201,6 +201,8 @@ function sorting_metric_output = sorting_metrics_wave()
         % loop through active clusters
             disp('Generating autocorrelograms for clusters.');
             parfor_progress(numel(active_clusters));
+            avg_valley_r = zeros(numel(active_clusters),1);
+            autocorr_diff = zeros(numel(active_clusters),1);
             parfor i=1:numel(active_clusters)
                 % generate autocorrelogram per active cluster
                 cell_data = spikes_by_bin(i, :);
@@ -218,8 +220,9 @@ function sorting_metric_output = sorting_metrics_wave()
                  %
                  saveas(f, [auto_directory slash ['autocorr_cluster' num2str(active_clusters(i)) '.png']]);
                  close all;
-                 %NOTE: I must come up with a way of measuring the width of
-                 %the valley in autocorrelograms!!!
+                 %Assess the valley in autocorrelograms
+                 middle_coeff = numel(x_coeff)/2+0.5;
+                 avg_valley_r(i) = mean(x_coeff(middle_coeff+1:middle_coeff+5));
                  
                  % difference between autocorr of 1st half & 2nd half
                  first_half = cell_data(1:round(numel(cell_data)/2));
@@ -232,15 +235,25 @@ function sorting_metric_output = sorting_metrics_wave()
             parfor_progress(0);
             
             %save autocorr diff figure
+            figure;
             f = bar(autocorr_diff);
             axis([0 numel(autocorr_diff) 0 inf]);
             a = gca; a.XTick = 1:num_active_clusters;xticklabels(active_clusters);
             xlabel('Clusters');
             ylabel('Sum Squared Difference between 1st & 2nd Half Autocorrelation');
             title('Sum Squared Difference between 1st & 2nd Half Autocorrelation');
-            saveas(f, [new_directory slash 'autocorr_diff_halves.png']);
+            saveas(f, [new_directory slash 'autocorr_diff_halves.png']); close all;
             
-            disp('Saved cluster autocorrelograms.');
+            %save avg valley R figure 
+            figure;
+            f = bar(avg_valley_r);
+            axis([0 numel(avg_valley_r) 0 inf]);
+            a = gca; a.XTick = 1:num_active_clusters;xticklabels(active_clusters);
+            xlabel('Clusters');
+            ylabel('Avg AutoCorr Valley R Value');
+            title('Average AutoCorrelation R Value of Lag <= 5ms');
+            saveas(f, [new_directory slash 'autocorr__autocorr_valley_r.png']); close all;
+            disp('Saved cluster autocorrelograms.'); 
         
  %% drift measure: slope of firing rate (over 30s) over session
     % bin spikes by minute
