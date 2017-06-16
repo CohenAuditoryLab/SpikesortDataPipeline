@@ -1,33 +1,53 @@
-function mat2wavecluspolytrode
-
+function mat2wavecluspolytrode(filename)
+disp('Select the path for your .mat data');
 path = uigetdir();
 cd(path);
-load data_for_bk;
 
-%data is opened 
-temp_data = data.streams.NRaw.data;
-index = data.snips.eBxS.ts;
-sr = data.streams.NRaw.fs;
-param.channels = size(temp_data, 1);
+disp(['Loading ' filename]);
+load(filename);
 
-%save to mat file
-data = temp_data(1,:);
-save('polytrode1.mat', 'data', 'index', 'sr');
-data = temp_data(2,:);
-save('polytrode2.mat', 'data', 'index', 'sr');
-data = temp_data(3,:);
-save('polytrode3.mat', 'data', 'index', 'sr');
-data = temp_data(4,:);
-save('polytrode4.mat', 'data', 'index', 'sr');
+%define data
+data_temp = spikes;
+r = size(data_temp, 1);
+
+%select path for wave_clus
+disp('Select the path for wave_clus');
+waveclus = uigetdir();
+cd(waveclus);
+
+% define sampling rate, timestamps, and parameters
+sr = fs;
+index = (0:size(data_temp,2)-1)/sr;
+param.stdmin = 3.5; 
+param.segments_length = 10;
+param.to_plot_std = 2;
+param.detect_fmax = 7000;
 
 %make .txt file with name of files to use 
 fileID = fopen('polytrode1.txt','w');
-fprintf(fileID, strcat('polytrode1.mat', '\n', 'polytrode2.mat', '\n', ...
-    'polytrode3.mat', '\n', 'polytrode4.mat'));
 
+for n = 1:r
+%     disp(['Creating data file for channel ', num2str(n), ' of ', num2str(r)]);
+%     
+%     data = data_temp(n, :);
+%     
+     name = strcat(filename, '_channelPOLY', num2str(n));
+     ext = '.mat';
+%     
+%     %save .mat file
+%     save(strcat(name, ext), 'data', 'index', 'sr');
+    disp(['Printing data file for channel ', num2str(n), ' of ', num2str(r)]);
+    fprintf(fileID, strcat(name, ext, '\n'));
+end
+
+%make sure wave_clus is in the path
+addpath(genpath('/media/Data_Store/wave_clus/MATLAB/wave_clus-testing'))
+
+disp('Getting spikes...');
 %get spikes 
 Get_spikes_pol(1, 'par', param);
 
+disp('Clustering...');
 %outputs filename_spikes.mat
 %get clusters 
 Do_clustering(1);
