@@ -8,6 +8,4 @@ correct location:
 - ops.Nfilt (config.m)
 - createChannelMapFile.m
 
-To run the simulation, run TDTtoKiloSort(\<blockpath\>) where \<blockpath\>
-is a string path to a block folder in a tank file. <br>
-Example: TDTtoKiloSort('C:\work\tanks\STRF_Jun_05_64_sr25k\Block-4')
+Store all data files in C:\work\datafiles\TDT and run KiloRun.bat to simulate.
