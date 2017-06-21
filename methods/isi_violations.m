@@ -6,6 +6,7 @@
             violations = zeros(max(spike_clusters),1);
             clusters = zeros(max(spike_clusters),1);
         %loop through clusters
+            disp('Computing ISI distributions & violations.');
             for i=1:max(spike_clusters)
                 %get spike times in cluster
                     cluster_spikes = double(spike_times(find(spike_clusters==i)))./double(sampling_rate); % now in seconds

@@ -32,7 +32,7 @@
 %             end;
 %             avg_diff = mean(abs(acor_diff));
 %             avg_diff_array(k,j) = avg_diff;
-             fprintf(['\n' num2str(k) '&' num2str(j) '\n']);
+             %fprintf(['\n' num2str(k) '&' num2str(j) '\n']);
             
             % plot correlogram
             % make crosscorr directory 

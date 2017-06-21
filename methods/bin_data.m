@@ -1,8 +1,5 @@
 %% BIN DATA
     % By Matt Schaff, matthew.schaff@gmail.com
-     % Sampling rate
-        sampling_rate = 1e3;
-        disp(sampling_rate);
      % Convert data into spikes by bin by cluster(cell)
         % intialize variables
         bin_size = 1e-3; % in seconds
@@ -33,9 +30,5 @@
         num_active_clusters = numel(active_clusters);
         parfor_progress(0);
         % save binned spikes
-        new_directory = [data_directory slash 'sorting_fidelity_metrics'];
-        if 7~=exist(new_directory, 'dir')
-            mkdir(new_directory);
-        end
         save([new_directory slash 'binned_spikes_by_cluster.mat'], 'spikes_by_bin');
         disp('Saved binned spikes by cluster.');

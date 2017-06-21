@@ -42,7 +42,7 @@
                  second_half = cell_data(round(numel(cell_data)/2)+1:end);
                  [first_coeff, lag] = xcorr(first_half, first_half, lag_units, 'coeff');
                  [second_coeff, lag] = xcorr(second_half, second_half, lag_units, 'coeff');
-                 autocorr_diff(i) = sum((first_coeff - second_coeff).^2) % sum of squared difference
+                 autocorr_diff(i) = sum((first_coeff - second_coeff).^2); % sum of squared difference
                  parfor_progress;
             end
             parfor_progress(0);

@@ -16,7 +16,6 @@
         P = polyfit(x,firing_rates(k,:),1);
         line_slopes(k) = P(1);
          cluster_curve(k) = plot(x,firing_rates(k,:));
-         disp(cluster_curve(k));
          yfit = P(1)*x+P(2);
          plot(x,yfit,'r-.');
     end

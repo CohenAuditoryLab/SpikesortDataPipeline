@@ -2,6 +2,7 @@
     %  false positives & negatives
     %  max R with a sliding lag, max lag 50 ms
     %  questionable sorting if high R at close to 0 ms lag
+    disp('Computing 0-lag pair-wise correlation matrix.');
     n = size(spikes_by_bin',2);
     [A,p] = corrcoef(spikes_by_bin');
      p(p >= 0.05) = 0;
