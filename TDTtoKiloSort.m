@@ -1,15 +1,13 @@
-function TDTtoKiloSort(fname)
+function TDTtoKiloSort(datafile,fpath)
 %TDTtoKiloSort  Run a KiloSort simulation using TDT data.
-%   TDTtoKiloSort(fname) runs KiloSort on the file (string)
+%   TDTtoKiloSort(fname) runs KiloSort on datafile and saves to fpath
 
 % specify location to store data files for this simulation
-fpath = (fullfile('C:\work\datafiles\spikes', fname));
 if ~exist(fpath, 'dir'); mkdir(fpath); end
 
 addpath(genpath('C:\work\KiloSort-master')) % path to kilosort folder
 addpath(genpath('C:\work\phy-master')) % path to npy-matlab scripts
-pathToYourConfigFile = 'C:\work\TDTtoKiloSort'; % path to the config file
-pathToYourDataFile = 'C:\work\datafiles\TDT'; % path to matlab format TDT data
+pathToYourConfigFile = 'D:\SpikeSortingPipeline\Code\TDTtoKiloSort';
 
 % run the config file to build the structure of options (ops)
 run(fullfile(pathToYourConfigFile, 'config.m'))
@@ -20,8 +18,8 @@ tic; % start timer
 createChannelMapFile(fpath) % create and save file in specified location
 
 % open converted matlab data
-load (fullfile(pathToYourDataFile, [fname,'.mat']))
-data = importdata([fname,'.mat']);
+load datafile
+data = importdata(datafile);
 rData = data.spikes;
 
 % store formatted data
