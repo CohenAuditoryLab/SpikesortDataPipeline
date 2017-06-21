@@ -1,3 +1,0 @@
-@echo off
-set origin=PATH_TO_UNSORTED_RAW_TDT_FILES
-set dest=PATH_TO_STORE_SORTED_FILES
