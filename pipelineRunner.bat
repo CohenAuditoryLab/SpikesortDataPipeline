@@ -1,4 +1,4 @@
-call SetPaths.bat
+call setPaths.bat
 cd %origin%
 pause
 for /D %%f in (*) do (
