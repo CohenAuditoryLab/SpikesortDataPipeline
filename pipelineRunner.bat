@@ -1,3 +1,4 @@
+@echo off
 call setPaths.bat
 cd %origin%
 pause
