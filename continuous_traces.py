@@ -1,6 +1,6 @@
 import numpy as np
 import scipy, os
-from scipy.signal import butter,
+from scipy.signal import butter
 from scipy.ndimage.filters import gaussian_filter1d
 from matplotlib.pyplot import mlab
 import matplotlib.pyplot as plt
@@ -12,52 +12,52 @@ samplingRate=30000.
 #wrapper for filtering continous data of different forms.
 #data can be a single continuous trace, a dictionary containing a key called 'data' whose value is a continous trace, or a dictionary of traces, or a dicit
 def filtr(data,low, high, sampleHz, order):
-    if type(data) is dict:
-        if 'data' in data.keys():
-            return filterTrace(data['data'],low, high, sampleHz, order)
-        else:
-            out = {}
-            for i,key in enumerate(data.keys()):
-                out[key] = data[key]
-                out[key]['data']= filterTrace(data[key]['data'],low, high, sampleHz, order)
-            return out
-    else:
-        return filterTrace(data,low, high, sampleHz, order)
+	if type(data) is dict:
+		if 'data' in data.keys():
+			return filterTrace(data['data'],low, high, sampleHz, order)
+		else:
+			out = {}
+			for i,key in enumerate(data.keys()):
+				out[key] = data[key]
+				out[key]['data']= filterTrace(data[key]['data'],low, high, sampleHz, order)
+			return out
+	else:
+		return filterTrace(data,low, high, sampleHz, order)
 
 #filter a bit of continuous data. uses butterworth filter.
 def filterTrace(trace, low, high, sampleHz, order):
-    low = float(low)
-    high = float(high)
-    nyq = 0.5 * sampleHz
-    low = low / nyq
-    high = high / nyq
-    b, a = butter(order, [low, high], btype='band')
-    filtered = lfilter(b, a, trace)
-    return filtered
-    
-	
-			
+	low = float(low)
+	high = float(high)
+	nyq = 0.5 * sampleHz
+	low = low / nyq
+	high = high / nyq
+	b, a = butter(order, [low, high], btype='band')
+	filtered = lfilter(b, a, trace)
+	return filtered
+
+
+
 def etree_to_dict(t):
-    d = {t.tag : map(etree_to_dict, t.getchildren())}
-    d.update(('@' + k, v) for k, v in t.attrib.iteritems())
-    d['text'] = t.text
-    return d
+	d = {t.tag : map(etree_to_dict, t.getchildren())}
+	d.update(('@' + k, v) for k, v in t.attrib.iteritems())
+	d['text'] = t.text
+	return d
 
 def get_channel_count(path,from_channel_map = True,from_templates=False):
 	'''
 	reads the settings.xml from the OpenEphys GUI to get the number of recorded channels.
 	'''
-    d = etree_to_dict(xml.etree.ElementTree.parse(os.path.join(path,'settings.xml')).getroot())
-    chs =0
-    if from_templates:
+	d = etree_to_dict(xml.etree.ElementTree.parse(os.path.join(path,'settings.xml')).getroot())
+	chs =0
+	if from_templates:
 		return np.load(open(os.path.join(path,'templates.npy'))).shape[-1]
-    if d['SETTINGS'][1]['SIGNALCHAIN'][0]['@name'] == 'Sources/Neuropix':
+	if d['SETTINGS'][1]['SIGNALCHAIN'][0]['@name'] == 'Sources/Neuropix':
 		for info in d['SETTINGS'][1]['SIGNALCHAIN'][0]['PROCESSOR'][:385]:
 			if 'CHANNEL' in info.keys():
 				if info['CHANNEL'][0]['@record'] == '1':
 					chs +=1
 		return chs
-    if d['SETTINGS'][1]['SIGNALCHAIN'][0]['@name'] == 'Sources/Rhythm FPGA':
+	if d['SETTINGS'][1]['SIGNALCHAIN'][0]['@name'] == 'Sources/Rhythm FPGA':
 		if from_channel_map:
 			for nm in d['SETTINGS'][1]['SIGNALCHAIN']:
 				name = nm['@name']
@@ -73,7 +73,6 @@ def get_channel_count(path,from_channel_map = True,from_templates=False):
 					if info['CHANNEL'][0]['@record'] == '1':
 						chs +=1
 		return chs
-	
 
 
 
@@ -85,25 +84,26 @@ def get_channel_count(path,from_channel_map = True,from_templates=False):
 
 
 
-#returns the root mean squared of the input data    
+
+#returns the root mean squared of the input data
 def RMS(data,start=0,window=0,despike=False):
-    start = start * samplingRate# sampling rate
-    if window == 0:
-        window = len(data)
-    else:
-        window = window * samplingRate # sampling rate
-    #chunk = filterTrace(data[start:start+window], 70, 6000, 25000, 3)[200:window]
-    chunk = data[int(start):int(start)+int(window)] - np.mean(data[int(start):int(start)+int(window)])
-    if despike:
+	start = start * samplingRate# sampling rate
+	if window == 0:
+		window = len(data)
+	else:
+		window = window * samplingRate # sampling rate
+	#chunk = filterTrace(data[start:start+window], 70, 6000, 25000, 3)[200:window]
+	chunk = data[int(start):int(start)+int(window)] - np.mean(data[int(start):int(start)+int(window)])
+	if despike:
 		chunk = despike_trace(chunk,threshold=180)
-    return np.sqrt(sum(chunk**2)/float(len(chunk)))
+	return np.sqrt(sum(chunk**2)/float(len(chunk)))
 
 def despike_trace(trace,threshold_sd = 2.5,**kwargs):
 	if 'threshold' in kwargs.keys():
 		threshold = kwargs['threshold']
 	else:
 		threshold = np.mean(trace)+threshold_sd*np.std(trace)
-		
+
 	spike_times_a = mlab.cross_from_below(trace,threshold)
 	spike_times_b = mlab.cross_from_below(trace,-1*threshold)
 	for spike_time in np.concatenate((spike_times_b,spike_times_a)):
@@ -116,7 +116,7 @@ def spikeamplitudes_trace(trace,threshold_sd = 3.0,percentile = 0.9,**kwargs):
 		threshold = kwargs['threshold']
 	else:
 		threshold = np.mean(trace)+threshold_sd*np.std(trace)
-		
+
 	spike_times_a = mlab.cross_from_below(trace,threshold)
 	amps=[]
 	for spike_time in spike_times_a:
@@ -126,94 +126,94 @@ def spikeamplitudes_trace(trace,threshold_sd = 3.0,percentile = 0.9,**kwargs):
 		amps= [0]
 	return np.sort(amps)[int(len(amps)*percentile)]# / 5.0
 
-#returns the peak to peak range of the input data     
+#returns the peak to peak range of the input data
 def p2p(data,start=0,window=0):
-    start = start * samplingRate# sampling rate
-    if window == 0:
-        window = len(data)
-    else:
-        window = window * samplingRate # sampling rate
-    chunk = data[start:start+window]
-    return np.max(chunk)-np.min(chunk)
-    
+	start = start * samplingRate# sampling rate
+	if window == 0:
+		window = len(data)
+	else:
+		window = window * samplingRate # sampling rate
+	chunk = data[start:start+window]
+	return np.max(chunk)-np.min(chunk)
+
 #computes a power spectrum of the input data
 #optionally, plot the computed spectrum
 def powerspectrum(data,start=0,window=0,plot=False,ymin=1e-24,ymax=1e8,title='',samplingRate=2500):
-    start = start * samplingRate# sampling rate
-    if window == 0:
-        window = len(data)
-    else:
-        window = window * samplingRate # sampling rate
-    chunk = data[start:start+window]/1e6
-    ps = np.abs(np.fft.fft(chunk))**2
-    time_step = 1. / samplingRate
-    freqs = np.fft.fftfreq(chunk.size, time_step)
-    idx = np.argsort(freqs)
-    ps = scipy.signal.savgol_filter(ps,5,3)
-    if plot:
-        plt.plot(freqs[idx], ps[idx]);
-        plt.xlim(xmin=0.01);
-        plt.ylim(ymin=ymin,ymax=ymax)
-        plt.xscale('log')
-        plt.yscale('log')
-        plt.ylabel(r'$power\/density\/\frac{V^2}{Hz}$',color='k',fontsize=18)
-        plt.xlabel(r'$frequency,\/ Hz$',color='k',fontsize=24)
-        plt.tick_params(axis='both', which='major', labelsize=24)#;plt.locator_params(axis='y',nbins=6)
-        plt.title(title)
-    return (freqs[idx], ps[idx])
+	start = start * samplingRate# sampling rate
+	if window == 0:
+		window = len(data)
+	else:
+		window = window * samplingRate # sampling rate
+	chunk = data[start:start+window]/1e6
+	ps = np.abs(np.fft.fft(chunk))**2
+	time_step = 1. / samplingRate
+	freqs = np.fft.fftfreq(chunk.size, time_step)
+	idx = np.argsort(freqs)
+	ps = scipy.signal.savgol_filter(ps,5,3)
+	if plot:
+		plt.plot(freqs[idx], ps[idx]);
+		plt.xlim(xmin=0.01);
+		plt.ylim(ymin=ymin,ymax=ymax)
+		plt.xscale('log')
+		plt.yscale('log')
+		plt.ylabel(r'$power\/density\/\frac{V^2}{Hz}$',color='k',fontsize=18)
+		plt.xlabel(r'$frequency,\/ Hz$',color='k',fontsize=24)
+		plt.tick_params(axis='both', which='major', labelsize=24)#;plt.locator_params(axis='y',nbins=6)
+		plt.title(title)
+	return (freqs[idx], ps[idx])
 
 def periodogram(data,start=0,window=0,plot=False,ymin=1e-24,ymax=1e8,title='',samplingRate=2500):
-    start = start * samplingRate# sampling rate
-    if window == 0:
-        window = len(data)
-    else:
-        window = window * samplingRate # sampling rate
-    chunk = data[start:start+window]
-    f,pXX = scipy.signal.periodogram(chunk,samplingRate,nfft=samplingRate)
-    pXX = scipy.signal.savgol_filter(pXX,3,1)
-    if plot:
-        plt.plot(f, pXX);
-        plt.xlim(xmin=0.01);
-        plt.ylim(ymin=ymin,ymax=ymax)
-        plt.xscale('log')
-        plt.yscale('log')
-        plt.ylabel(r'$power\/density\/\frac{V^2}{Hz}$',color='k',fontsize=18)
-        plt.xlabel(r'$frequency,\/ Hz$',color='k',fontsize=24)
-        plt.tick_params(axis='both', which='major', labelsize=24)#;plt.locator_params(axis='y',nbins=6)
-        plt.title(title)
-    return (f, pXX)
+	start = start * samplingRate# sampling rate
+	if window == 0:
+		window = len(data)
+	else:
+		window = window * samplingRate # sampling rate
+	chunk = data[start:start+window]
+	f,pXX = scipy.signal.periodogram(chunk,samplingRate,nfft=samplingRate)
+	pXX = scipy.signal.savgol_filter(pXX,3,1)
+	if plot:
+		plt.plot(f, pXX);
+		plt.xlim(xmin=0.01);
+		plt.ylim(ymin=ymin,ymax=ymax)
+		plt.xscale('log')
+		plt.yscale('log')
+		plt.ylabel(r'$power\/density\/\frac{V^2}{Hz}$',color='k',fontsize=18)
+		plt.xlabel(r'$frequency,\/ Hz$',color='k',fontsize=24)
+		plt.tick_params(axis='both', which='major', labelsize=24)#;plt.locator_params(axis='y',nbins=6)
+		plt.title(title)
+	return (f, pXX)
 
 def welch_power(data,samplingRate=2500,start=0,window=0,plot=False,ymin=1e-24,ymax=1e8,title=''):
-    start = start * samplingRate# sampling rate
-    if window == 0:
-        window = len(data)
-    else:
-        window = window * samplingRate # sampling rate
-    chunk = data[start:start+window]
-    f,pXX = scipy.signal.welch(chunk,samplingRate,nfft=samplingRate/2)
-    #pXX = scipy.signal.savgol_filter(pXX,3,1)
-    if plot:
-        plt.plot(f, pXX);
-        plt.xlim(xmin=0.01);
-        plt.ylim(ymin=ymin,ymax=ymax)
-        plt.xscale('log')
-        plt.yscale('log')
-        plt.ylabel(r'$power\/density\/\frac{V^2}{Hz}$',color='k',fontsize=18)
-        plt.xlabel(r'$frequency,\/ Hz$',color='k',fontsize=24)
-        plt.tick_params(axis='both', which='major', labelsize=24)#;plt.locator_params(axis='y',nbins=6)
-        plt.title(title)
-    return (f, pXX)
+	start = start * samplingRate# sampling rate
+	if window == 0:
+		window = len(data)
+	else:
+		window = window * samplingRate # sampling rate
+	chunk = data[start:start+window]
+	f,pXX = scipy.signal.welch(chunk,samplingRate,nfft=samplingRate/2)
+	#pXX = scipy.signal.savgol_filter(pXX,3,1)
+	if plot:
+		plt.plot(f, pXX);
+		plt.xlim(xmin=0.01);
+		plt.ylim(ymin=ymin,ymax=ymax)
+		plt.xscale('log')
+		plt.yscale('log')
+		plt.ylabel(r'$power\/density\/\frac{V^2}{Hz}$',color='k',fontsize=18)
+		plt.xlabel(r'$frequency,\/ Hz$',color='k',fontsize=24)
+		plt.tick_params(axis='both', which='major', labelsize=24)#;plt.locator_params(axis='y',nbins=6)
+		plt.title(title)
+	return (f, pXX)
 
-#measure the cross-spectral coherence between two traces. 
+#measure the cross-spectral coherence between two traces.
 def coherence(x,y,samplingRate = 30000,returnval=None):
-    spectrum, frequencies = mlab.cohere(x,y,Fs=float(samplingRate),NFFT=int(samplingRate)/5)
-    if returnval:
-        if type(returnval) is float:
-            return np.interp(returnval,frequencies,spectrum)
-        if type(returnval) is tuple:
-            return np.trapz(spectrum[np.where(frequencies==returnval[0])[0]:np.where(frequencies==returnval[1])[0]],dx=5.0)  
-    else:
-        return (spectrum, frequencies)
+	spectrum, frequencies = mlab.cohere(x,y,Fs=float(samplingRate),NFFT=int(samplingRate)/5)
+	if returnval:
+		if type(returnval) is float:
+			return np.interp(returnval,frequencies,spectrum)
+		if type(returnval) is tuple:
+			return np.trapz(spectrum[np.where(frequencies==returnval[0])[0]:np.where(frequencies==returnval[1])[0]],dx=5.0)  
+	else:
+		return (spectrum, frequencies)
 	
 def get_surface_channel_spikeband(path,start=2.,end=10.,sampling_rate=30000,plot=False,filter_size=2,sigma=1.,filter=False,probemap=None):
 	mm = np.memmap(path, dtype=np.int16, mode='r')
