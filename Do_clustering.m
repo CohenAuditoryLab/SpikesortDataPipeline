@@ -385,7 +385,7 @@ if make_plots
 
 
         if par.print2file;
-            print(curr_fig,'-dpng',['fig2print_' filename num2str(fnum) '.png'],resolution);
+            print(curr_fig,'-dpng',['fig2print_' filename '_' num2str(fnum) '.png'],resolution);
         else
             print
         end 
