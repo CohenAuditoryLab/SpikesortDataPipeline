@@ -32,31 +32,46 @@ function sorting_metrics = sorting_metrics(data_dir_or_file, data_type, new_dire
         if data_type == 'wave'
             data = load(data_dir_or_file);
             data_directory = fileparts(data_dir_or_file);
-            spike_times = data.cluster_class(data.cluster_class(:,1) ~= 0,2); % get times of active clusters %readNPY([data_directory slash 'spike_times.npy']);
-            spike_clusters = data.cluster_class(data.cluster_class(:,1) ~= 0,1); % get times of active clusters %readNPY([data_directory slash 'spike_clusters.npy']); 
+            %spike_times = data.cluster_class(data.cluster_class(:,1) ~= 0,2); % get times of active clusters %readNPY([data_directory slash 'spike_times.npy']);
+            %spike_clusters = data.cluster_class(data.cluster_class(:,1) ~= 0,1); % get times of active clusters %readNPY([data_directory slash 'spike_clusters.npy']); 
+            
+            % Combine clusters from different wave_clus outputs
+            g = [];
+            for i=1:numel(data.allClusters)
+                g = [g; data.allClusters{i}(data.allClusters{i}(:,1)~=0,1)./10.+i, data.allClusters{i}(data.allClusters{i}(:,1)~=0,2)];
+            end
+            spike_times = g(:,2);
+            spike_clusters = g(:,1);
+            time_divisor = 1e3; % bec wave_clus outputs in milliseconds, not seconds or sampling number (like kilosort)
         %kilo
         elseif data_type == 'kilo'
             data_directory = data_dir_or_file;
             spike_times = readNPY([data_directory slash 'spike_times.npy']);
             spike_clusters = readNPY([data_directory slash 'spike_clusters.npy']);
+            time_divisor = double(sampling_rate);
         end
         disp('Data loaded.');
+        % save standard cluster_spike_output
+        standard_output = horzcat(spike_clusters, spike_times);
+        disp('Standard cluster & spike output saved.');
+        save([new_directory slash 'cluster_spike_output.mat'], 'standard_output');
     % turn off figure generation
         set(0,'DefaultFigureVisible','off');
-%% Bin Data
-   bin_data;
-%% 0 lag pair-wise correlation matrix with a threshold
-   pairwise_corr;
-%% Cross Correlograms
-   cross_corr;
-%% Refractory period violations vector (ISI)
-   isi_violations;
-%% Autocorrelation; false positive matrix
-   auto_corr;
-%% drift measure: slope of firing rate (over 30s) over session
-   drift_fr;
-%% conclusion
-    % turn on figure generation
-    set(0,'DefaultFigureVisible','on');
-    sorting_metrics = ['Sorting metrics complete. Output saved to: ' new_directory];
-end
+
+% %% Bin Data
+    bin_data;
+% %% 0 lag pair-wise correlation matrix with a threshold
+    pairwise_corr;
+% %% Cross Correlograms
+%    cross_corr;
+% %% Refractory period violations vector (ISI)
+    isi_violations;
+% %% Autocorrelation; false positive matrix
+    auto_corr;
+% %% drift measure: slope of firing rate (over 30s) over session
+    drift_fr;
+% %% conclusion
+%     % turn on figure generation
+     set(0,'DefaultFigureVisible','on');
+     sorting_metrics = ['Sorting metrics complete. Output saved to: ' new_directory];
+% end

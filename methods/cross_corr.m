@@ -3,13 +3,13 @@
     max_lag = 50e-3;
     lag_units = max_lag/bin_size;
     bootstrap_num = 100;
-    num_clusters = size(spikes_by_bin,1);
+    num_clusters_for_corr = size(spikes_by_bin,1);
     %start loop
     disp('Generating pair-wise cross-correlograms.');
-    parfor_progress(num_clusters);
-    avg_diff_array = zeros(num_clusters,num_clusters);
-    half_matrix = triu(ones(num_clusters,num_clusters));
-    for k=1:num_clusters
+    parfor_progress(num_clusters_for_corr);
+    avg_diff_array = zeros(num_clusters_for_corr,num_clusters_for_corr);
+    half_matrix = triu(ones(num_clusters_for_corr,num_clusters_for_corr));
+    for k=1:num_clusters_for_corr
         cell1_data = spikes_by_bin(k, :);
         for j=1:num_clusters
             if k==j

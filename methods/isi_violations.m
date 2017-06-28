@@ -3,13 +3,13 @@
     %   compute fractional level of contamination
         %initialize variables
             refractory_limit = 3e-3;
-            violations = zeros(max(spike_clusters),1);
-            clusters = zeros(max(spike_clusters),1);
+            violations = zeros(num_clusters,1);
+            clusters = zeros(num_clusters,1);
         %loop through clusters
             disp('Computing ISI distributions & violations.');
-            for i=1:max(spike_clusters)
+            for i=1:num_clusters
                 %get spike times in cluster
-                    cluster_spikes = double(spike_times(find(spike_clusters==i)))./double(sampling_rate); % now in seconds
+                    cluster_spikes = double(spike_times(find(spike_clusters==cluster_names(i))))./time_divisor; % now in seconds
                     clusters(i) = numel(cluster_spikes);
                     if clusters(i) == 0
                         violations(i) = -1; %gonna take these out later
