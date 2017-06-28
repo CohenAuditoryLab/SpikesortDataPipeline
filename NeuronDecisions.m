@@ -1,7 +1,7 @@
 function NeuronDecisions(fpath, new_directory)
 
-load(fpath)
-
+output = load(fpath);
+g = output.standard_output;
 f = figure();
 pos = f.Position;
 ax = axes('Visible', 'off');
@@ -22,7 +22,7 @@ set(button, 'Callback', {@callback});
 button.Position(4) = 30;
 button.Position(2) = 0;
 button.Position(3) = 119;
-
+uicontrol('Style','text', 'String','Neuron Decisions', 'Position', [15 407 100 15]);
 t.ColumnName = {'Cluster','Included'};
 t.ColumnEditable = [false, true];
 t.ColumnWidth = {50, 50};
@@ -45,6 +45,7 @@ f.Position(3) = 157;
         end
         
         save(fullfile(new_directory,'final_clusters'), 'g')
+        msgbox(['Saved final cluster decisions to: ' fullfile(new_directory,'final_clusters') '.mat']);
     end
 
 end
