@@ -1,5 +1,15 @@
-function NeuronDecisions(fpath, new_directory)
+function NeuronDecisions(varargin)
 
+if nargin < 2 
+    disp('Select data path')
+    fpath = uigetdir();
+    disp('Select save path')
+    new_directory = uigetdir();
+else 
+    fpath = varargin{1};
+    new_directory = varargin{2};
+end
+    
 output = load(fpath);
 g = output.standard_output;
 f = figure();
@@ -49,4 +59,3 @@ f.Position(3) = 157;
     end
 
 end
-
