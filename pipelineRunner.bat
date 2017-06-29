@@ -12,5 +12,5 @@ for /D %%f in (*) do (
   matlab -nodisplay -nosplash -nodesktop -r TDTtoKiloSort(%dest%\%%f\RawData\%%f.mat,%dest%\%%f\KiloSort)
   matlab -nodisplay -nosplash -nodesktop -r mat2waveclus(%dest%\%%f\RawData\%%f.mat,%dest%\%%f\WaveClus)
   matlab -nodisplay -nosplash -nodesktop -r sorting_metrics(%dest%\%%f\KiloSort,kilo,%dest%\%%f\Metrics\KiloSort)
-  matlab -nodisplay -nosplash -nodesktop -r sorting_metrics(%dest%\%%f\WaveClus\clusters_%%f,wave,%dest%\%%f\Metrics\WaveClus)
+  matlab -nodisplay -nosplash -nodesktop -r sorting_metrics(%dest%\%%f\WaveClus\clusters,wave,%dest%\%%f\Metrics\WaveClus)
 )
