@@ -2,7 +2,9 @@ function NeuronDecisions(varargin)
 
 if nargin < 2 
     disp('Select data path')
-    fpath = uigetfile();
+    [fname,fpath] = uigetfile();
+    fpath = fullfile(fpath,fname);
+    display(fpath);
     disp('Select save path')
     new_directory = uigetdir();
 else 
@@ -55,7 +57,7 @@ f.Position(3) = 157;
         end
         
         save(fullfile(new_directory,'final_clusters'), 'g')
-        msgbox(['Saved final cluster decisions to: ' fullfile(new_directory,'final_clusters') '.mat']);
+        close(f)
     end
 
 end
