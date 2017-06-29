@@ -12,9 +12,12 @@ ops.fproc    = fullfile(fpath, 'temp_wh.dat'); % residual of RAM of preprocessed
 ops.root     = fpath; % 'openEphys' only: where raw files are
 
 %% options for channels and clustering
-ops.Nfilt    = 128; % number of clusters to use (2-4x more than Nchan, multiple of 32)
-ops.nNeighPC = 12;  % visual only (Phy): num channels to mask the PCs
-ops.nNeigh   = 16;  % visual only (Phy): num neighbor templates to retain projections of
+ops.fs       = 24414;        % sampling rate
+ops.NchanTOT = 64;           % total number of channels
+ops.Nchan    = ops.NchanTOT; % num active channels
+ops.Nfilt    = 2*ops.Nchan;  % num clusters to use (2-4x Nchan, multiple of 32)
+ops.nNeighPC = 12;           % (Phy): num channels to mask the PCs
+ops.nNeigh   = 16;           % (Phy): num neighbor templates to retain projections of
 
 % options for channel whitening
 ops.whitening = 'full'; % type of whitening
@@ -22,7 +25,7 @@ ops.nSkipCov = 1; % compute whitening matrix from every N-th batch
 ops.whiteningRange = 32; % how many channels to whiten together
 
 % define the channel map as a filename made using createChannelMapFile.m
-ops.chanMap = fullfile(fpath, 'chanMap.mat');
+ops.chanMap = [];
 
 % fraction of "noise" templates allowed to span all channel groups
 % (see createChannelMapFile for more info).
@@ -51,7 +54,7 @@ ops.splitT           = .1;          % lower threshold for splitting
 		
 %% options for initializing spikes from data
 ops.initialize      = 'no';    % 'fromData' or 'no'
-ops.spkTh           = -6;      % spike threshold in standard deviations
+ops.spkTh           = -3.5;    % spike threshold in standard deviations
 ops.loc_range       = [3  1];  % ranges to detect peaks; plus/minus in time and channel
 ops.long_range      = [30  6]; % ranges to detect isolated peaks
 ops.maskMaxChannels = 5;       % how many channels to mask up/down
