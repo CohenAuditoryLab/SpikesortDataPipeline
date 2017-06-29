@@ -2,7 +2,7 @@ function NeuronDecisions(varargin)
 
 if nargin < 2 
     disp('Select data path')
-    fpath = uigetdir();
+    fpath = uigetfile();
     disp('Select save path')
     new_directory = uigetdir();
 else 
