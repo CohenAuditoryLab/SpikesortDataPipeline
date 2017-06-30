@@ -15,7 +15,6 @@ pathToYourConfigFile = 'D:\SpikeSortingPipeline\Code\matToKiloSort';
 
 % run the config file to build the structure of options (ops)
 run(fullfile(pathToYourConfigFile, 'config.m'))
-ops.fbinary = fbinary;
 
 if ops.GPU, gpuDevice(1); end % initialize GPU
 tic; % start timer
