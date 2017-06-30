@@ -1,7 +1,7 @@
 %config  Build the structure of options (ops) for a KiloSort simulation.
 
 ops.GPU         = 1; % whether to run this code on an Nvidia GPU
-ops.parfor      = 0; % whether to use parfor to accelerate parts of algorithm
+ops.parfor      = 1; % whether to use parfor to accelerate parts of algorithm
 ops.verbose     = 1; % whether to print command line progress
 ops.showfigures = 1; % whether to plot figures during optimization
 
@@ -22,7 +22,7 @@ ops.nNeigh   = 16;           % (Phy): num neighbor templates to retain projectio
 % options for channel whitening
 ops.whitening = 'full'; % type of whitening
 ops.nSkipCov = 1; % compute whitening matrix from every N-th batch
-ops.whiteningRange = 32; % how many channels to whiten together
+ops.whiteningRange = inf; % how many channels to whiten together
 
 % define the channel map as a filename made using createChannelMapFile.m
 ops.chanMap = [];
@@ -35,6 +35,7 @@ ops.criterionNoiseChannels = 0.2;
 ops.Nrank       = 3;     % matrix rank of spike template model
 ops.nfullpasses = 6;     % num complete passes through data during optimization
 ops.maxFR       = 20000; % maximum number of spikes to extract per batch
+ops.fslow       = 6e3;
 ops.fshigh      = 300;   % frequency for high pass filtering
 ops.ntbuff      = 64;    % samples of symmetrical buffer for whitening and spike detection
 ops.scaleproc   = 200;   % int16 scaling of whitened data
@@ -53,13 +54,13 @@ ops.mergeT           = .1;          % upper threshold for merging
 ops.splitT           = .1;          % lower threshold for splitting
 		
 %% options for initializing spikes from data
-ops.initialize      = 'no';    % 'fromData' or 'no'
-ops.spkTh           = -3.5;    % spike threshold in standard deviations
-ops.loc_range       = [3  1];  % ranges to detect peaks; plus/minus in time and channel
-ops.long_range      = [30  6]; % ranges to detect isolated peaks
-ops.maskMaxChannels = 5;       % how many channels to mask up/down
-ops.crit            = .65;     % upper criterion for discarding spike repeates
-ops.nFiltMax        = 10000;   % maximum "unique" spikes to consider
+ops.initialize      = 'fromData'; % 'fromData' or 'no'
+ops.spkTh           = -3.5;       % spike threshold in standard deviations
+ops.loc_range       = [3  1];     % ranges to detect peaks; plus/minus in time and channel
+ops.long_range      = [30  6];    % ranges to detect isolated peaks
+ops.maskMaxChannels = 5;          % how many channels to mask up/down
+ops.crit            = .65;        % upper criterion for discarding spike repeates
+ops.nFiltMax        = 10000;      % maximum "unique" spikes to consider
 
 % load predefined principal components (visualization only (Phy): used for features)
 dd       = load('PCspikes2.mat'); % you might want to recompute this from your own data
