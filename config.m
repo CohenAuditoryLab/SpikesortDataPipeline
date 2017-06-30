@@ -7,7 +7,7 @@ ops.showfigures = 1; % whether to plot figures during optimization
 
 %% options for data storage
 ops.datatype = 'dat'; % binary ('dat', 'bin') or 'openEphys'
-ops.fbinary  = fullfile(fpath, 'sim_binary.dat'); % will be created for 'openEphys'
+ops.fbinary  = fbinary; % will be created for 'openEphys'
 ops.fproc    = fullfile(fpath, 'temp_wh.dat'); % residual of RAM of preprocessed data
 ops.root     = fpath; % 'openEphys' only: where raw files are
 
