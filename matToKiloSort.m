@@ -1,31 +1,26 @@
-function TDTtoKiloSort(datafile,fpath)
+function matToKiloSort(fbinary,fpath,num_channels)
 %TDTtoKiloSort  Run a KiloSort simulation using TDT data.
 %   TDTtoKiloSort(fname) runs KiloSort on datafile and saves to fpath
+
+if nargin < 3
+    num_channels = 64;
+end
 
 % specify location to store data files for this simulation
 if ~exist(fpath, 'dir'); mkdir(fpath); end
 
 addpath(genpath('C:\work\KiloSort-master')) % path to kilosort folder
 addpath(genpath('C:\work\phy-master')) % path to npy-matlab scripts
-pathToYourConfigFile = 'D:\SpikeSortingPipeline\Code\TDTtoKiloSort';
+pathToYourConfigFile = 'D:\SpikeSortingPipeline\Code\matToKiloSort';
 
 % run the config file to build the structure of options (ops)
 run(fullfile(pathToYourConfigFile, 'config.m'))
+ops.fbinary = fbinary;
 
 if ops.GPU, gpuDevice(1); end % initialize GPU
 tic; % start timer
 
-createChannelMapFile(fpath) % create and save file in specified location
-
-% open converted matlab data
-load datafile
-data = importdata(datafile);
-rData = data.spikes;
-
-% store formatted data
-fidW = fopen(fullfile(fpath, 'sim_binary.dat'), 'w');
-fwrite(fidW, rData, 'int16');
-fclose(fidW);
+createChannelMapFile(fpath,num_channels) % create and save file in specified location
 
 % process formatted data with KiloSort
 [rez, DATA, uproj] = preprocessData(ops); % preprocess data and extract spikes
