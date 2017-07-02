@@ -5,6 +5,18 @@
     disp('Computing 0-lag pair-wise correlation matrix.');
     n = size(spikes_by_bin',2);
     [A,p] = corrcoef(spikes_by_bin');
+    % save significant correlations figure
+    [row,col] = find(triu(p,1) < 0.05 & triu(p,1) ~=0);
+    row_col = unique(sort(horzcat(row,col)), 'rows');
+    idx = sub2ind(size(A), row_col(:,1), row_col(:,2));
+    ylabels = strcat(num2str(active_clusters(row_col(:,1))),'&',num2str(active_clusters(row_col(:,2))));
+    g = heatmap(A(idx), [], ylabels, A(idx), 'Colorbar', 'true', 'ShowAllTicks', true); 
+    %a = gca; a.YTick = 1:numel(row);
+    ylabel('Clusters'); xlabel('Pearson R value');
+    title([num2str(numel(row_col(:,1))) ' Significant Pair-Wise 0-Lag Correlations (p<.05)']);
+    saveas(g, [new_directory slash 'pairwisecorr_0lag_sig.png']);
+    close all;
+    % save general pairwise matrix figure
      p(p >= 0.05) = 0;
     p(1:length(p)+1:numel(p)) = 0;
     p = round(p, 4);

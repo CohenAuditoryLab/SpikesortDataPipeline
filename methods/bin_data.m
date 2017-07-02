@@ -8,7 +8,7 @@
         %loop
         spikes_by_bin = [];
         disp(['Binning cluster spike times by ' num2str(bin_size*1000) 'ms bins.']);
-        cluster_names = sort(unique(spike_clusters));
+        cluster_names = sort(unique(spike_clusters(spike_clusters)));
         num_clusters = numel(cluster_names);
         parfor_progress(num_clusters);
         cluster_count = zeros(num_clusters,1);
