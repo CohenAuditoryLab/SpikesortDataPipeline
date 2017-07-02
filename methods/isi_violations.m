@@ -59,4 +59,18 @@
             ylabel('ISI Violations/Spikes');
             title('ISI Refractory Violations per Spike Rate');
             saveas(f, [new_directory slash 'isi__refractory_violations_per_spike.png']); close all;
+            % save only violations greater than 5%
+            high_violators = find(violations_per_event_rate > 0.05);
+            if numel(high_violators) > 0
+               figure;
+               f = bar(violations_per_event_rate(high_violators));
+               a = gca; a.XTick = 1:numel(high_violators);
+               xlabel('Clusters');
+               xticklabels(active_clusters(high_violators));
+               ylabel('ISI Violations/Spikes');
+               title('ISI Refractory Violations per Spike Rate (Greater than 5%)');
+               saveas(f, [new_directory slash 'isi__high_violators.png']); close all;
+            else
+               disp('No cluster had a violation rate greater than 5%.');
+            end
             disp('Saved ISI violations per spike rate.');
