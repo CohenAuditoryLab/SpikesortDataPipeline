@@ -366,7 +366,7 @@ if make_plots
             xlim([1 size(spikes,2)]); 
             title(['Cluster ' num2str(i) ': # ' num2str(length(class)) ' (' num2str(nnz(classes(:)==i & ~forced(:))) ')'],'Fontweight','bold')
             ylimit = [ylimit;ylim];
-            print(indiv_fig,'-dpng',[filename(end-7:end) '_cluster' num2str(i) '.png'],resolution);
+            print(indiv_fig,'-dpng',['cluster_' filename(end-7:end) '_' num2str(i) '.png'],resolution);
             
         end
 
