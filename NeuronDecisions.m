@@ -19,7 +19,7 @@ end
 %% Load data and initialize figure/table/table callback 
     
 output = load(fpath);
-g = output.g; %output.standard_output;
+g = output.standard_output;
 f = figure('Color', 'White');
 set(f, 'name','Neuron Decisions');
 pos = f.Position;
@@ -64,16 +64,17 @@ button.Position(3) = 119;
 %% Images to be displayed on home screen
 
 isi = axes('Units', 'Pixels','Position', [(t.Position(3)+100)  pos(4) 450 350]);
-imisi = imread([new_directory filesep 'Metrics' filesep 'isi__high_violators.png']);
+imisi = imread([new_directory filesep 'kilo_output_metrics' filesep 'isi__high_violators.png']);
 figure(f); image(imisi); axis tight; axis off;
 
 autocor = axes('Units', 'Pixels', 'Position', [(t.Position(3) + 100) 0 450 350]);
-imauto = imread([new_directory filesep 'Metrics' filesep 'pairwisecorr_0lag_sig.png']);
+imauto = imread([new_directory filesep 'kilo_output_metrics' filesep 'pairwisecorr_0lag_sig.png']);
 figure(f); image(imauto); axis tight; axis off;
 
 %% Triangular matrix table and figure initialization and formatting 
 
-ftri = figure('name','Correlations Matrix');
+ftri = figure();
+set(ftri, 'name','Correlations Matrix');
 triang = TriangTable(clusters);
 
 tritab = uitable(ftri, 'Data', triang(2:end, :));
@@ -117,13 +118,13 @@ set(tritab, 'units', 'normalized', 'position', [0 0 1 1], 'CellSelectionCallback
         set(f1, 'WindowStyle','docked', 'name', 'Waveform');
         figure(f1); image(imsorted); axis off; axis tight;
         
-        imisidis = imread([new_directory filesep 'Metrics' filesep 'isi_distribution_' c]);
+        imisidis = imread([new_directory filesep 'kilo_output_metrics' filesep 'isi_distribution_' c]);
         f2 = figure();
         set(f2, 'WindowStyle','docked','name','ISI Distribution');
         figure(f2); image(imisidis); axis off; axis tight;
         
-        imaut = imread([new_directory filesep 'Metrics' filesep 'autocorrelations' filesep 'autocorr_cluster0' '.png']);
-        %imread([new_directory filesep 'Metrics' filesep 'autocorrelations' filesep 'autocorr_cluster' c '.png']);
+        imaut = imread([new_directory filesep 'kilo_output_metrics' filesep 'autocorrelations' filesep 'autocorr_cluster0' '.png']);
+        %imread([new_directory filesep 'kilo_output_metrics' filesep 'autocorrelations' filesep 'autocorr_cluster' c '.png']);
         f3 = figure();
         set(f3, 'WindowStyle','docked','name','Autocorrelogram');
         figure(f3); image(imaut); axis off; axis tight;
@@ -139,10 +140,8 @@ set(tritab, 'units', 'normalized', 'position', [0 0 1 1], 'CellSelectionCallback
         n2 = tritab.Data(n,m);
         n2 = n2{1};
         
-        imcor = imread([new_directory filesep 'Metrics' filesep ...
-            'cross_correlograms' filesep 'xcorr_0_2.png']);
-                %imread([new_directory filesep 'Metrics' filesep ...
-            %'cross_correlograms' filesep 'xcorr_' num2str(n1) '_' num2str(n2) '.png']);
+        imcor = imread([new_directory filesep 'kilo_output_metrics' filesep ...
+            'cross_correlograms' filesep 'xcorr_' num2str(n1) '_' num2str(n2) '.png']);
         fcor = figure('WindowStyle', 'docked', 'name', 'Cross Correlogram');
         figure(fcor); image(imcor); axis off; axis tight;
     end
