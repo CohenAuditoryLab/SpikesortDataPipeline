@@ -33,7 +33,7 @@ def read_kilosort_params(filename):
     params = {}
     for line in list(f):
         try:
-            params[line.split(' =')[0]]=line.split('= ')[1].replace('\r\n','')
+            params[line.split(' =')[0]]=line.split('= ')[1].replace('\r\n','').replace('.\n','').strip('.\n')
         except:
             pass
     return params
@@ -73,13 +73,13 @@ def ismember(a, b):
             bind[elt] = i
     return [bind.get(itm, None) for itm in a]  # None can be replaced by any other "not in b" 
 
-def load_waveforms(data,channel,times,pre=0.5,post=1.5,channels=384,sampling_rate=30000):
+def load_waveforms(datapath,channel,times,pre=0.5,post=1.5,channels=384,sampling_rate=30000):
     #input can be memory mapped file or a string specifiying the file to memory map. if string, deletes the memory mapped object when done, for hygiene.
     pre = pre * .001
     post = post * .001
     channel = int(channel)
     channels = int(channels)
-    if type(data)==str:
+    if type(datapath)==str:
         mm = np.memmap(datapath, dtype=np.int16, mode='r')
     else:
         mm=data
@@ -89,7 +89,7 @@ def load_waveforms(data,channel,times,pre=0.5,post=1.5,channels=384,sampling_rat
         temp = mm[start:start+int((pre+post)*sampling_rate*channels)][channel::channels]# - mm[start:start+int((pre+post)*sampling_rate*channels)][channel::channels][0]
         temp = temp - temp[0]
         waveforms.extend([temp * 0.195])
-    if type(data)==str:
+    if type(datapath)==str:
         del mm
     return waveforms
 
@@ -253,7 +253,7 @@ def cluster_signalToNoise(directory,time_limits=None,filename='experiment1_100-0
     
     params = read_kilosort_params(params_path)
     spike_times = np.load(spike_times_path) / float(params['sample_rate'])
-    channels = get_channel_count(directory)
+    channels = 64 #get_channel_count(directory)
     
     site_positions=option234_positions[np.linspace(0,channels-1,channels).astype(int)]
     data = load_phy_template(directory,site_positions)
@@ -289,9 +289,9 @@ def cluster_signalToNoise(directory,time_limits=None,filename='experiment1_100-0
                 mean = np.mean(ws,axis=0)       
 
                 if time_limits[1]==1e7:
-                    cunk = rawdata[int(650*int(params['sample_rate'].strip('.'))*channels):int(660*int(params['sample_rate'].strip('.'))*channels)][channel::channels] 
+                    cunk = rawdata[int(650*int(params['sample_rate'].strip('.').strip('.\n'))*channels):int(660*int(params['sample_rate'].strip('.').strip('.\n'))*channels)][channel::channels]
                 else:
-                    cunk = rawdata[int(time_limits[0]*int(params['sample_rate'].strip('.'))*channels):int(time_limits[1]*int(params['sample_rate'].strip('.'))*channels)][channel::channels] 
+                    cunk = rawdata[int(time_limits[0]*int(params['sample_rate'].strip('.').strip('.\n'))*channels):int(time_limits[1]*int(params['sample_rate'].strip('.').strip('.\n'))*channels)][channel::channels]
                 channel_chunk = filtr(cunk,300,6000,float(params['sample_rate']),3) * 0.195 # <-- re-filter and put into uV
                 
                 noise = sigma * np.median(np.abs(channel_chunk)/0.6725)
@@ -388,6 +388,7 @@ def masked_cluster_quality_sparse(spike_clusters,pc_features,pc_feature_ind,spik
                 this_cluster_chans = pc_feature_ind[this_template,:fet_n_chans]
                 other_clusters_IDs = []
                 fet_other_clusters = []
+                spikes_other_clusters = []
                 for ii,cluster_2 in enumerate(cluster_IDs):
                     if cluster_2 != cluster_ID:
                         all_spikes_2 = spike_times[np.where(spike_clusters==cluster_2)[0]].flatten()

@@ -1,6 +1,7 @@
 import numpy as np
 import scipy, os
 from scipy.signal import butter
+from scipy.signal import lfilter
 from scipy.ndimage.filters import gaussian_filter1d
 from matplotlib.pyplot import mlab
 import matplotlib.pyplot as plt
@@ -47,32 +48,33 @@ def get_channel_count(path,from_channel_map = True,from_templates=False):
 	'''
 	reads the settings.xml from the OpenEphys GUI to get the number of recorded channels.
 	'''
-	d = etree_to_dict(xml.etree.ElementTree.parse(os.path.join(path,'settings.xml')).getroot())
-	chs =0
-	if from_templates:
-		return np.load(open(os.path.join(path,'templates.npy'))).shape[-1]
-	if d['SETTINGS'][1]['SIGNALCHAIN'][0]['@name'] == 'Sources/Neuropix':
-		for info in d['SETTINGS'][1]['SIGNALCHAIN'][0]['PROCESSOR'][:385]:
-			if 'CHANNEL' in info.keys():
-				if info['CHANNEL'][0]['@record'] == '1':
-					chs +=1
-		return chs
-	if d['SETTINGS'][1]['SIGNALCHAIN'][0]['@name'] == 'Sources/Rhythm FPGA':
-		if from_channel_map:
-			for nm in d['SETTINGS'][1]['SIGNALCHAIN']:
-				name = nm['@name']
-				if name == 'Filters/Channel Map':
-					#chs = np.shape(d['SETTINGS'][1]['SIGNALCHAIN'][0]['PROCESSOR'][0]['CHANNEL_INFO'])[0]
-					for info in nm['PROCESSOR']:
-						if 'CHANNEL' in info.keys():
-							if info['CHANNEL'][0]['@record'] == '1':
-								chs +=1
-		else:
-			for info in d['SETTINGS'][1]['SIGNALCHAIN'][0]['PROCESSOR'][:385]:
-				if 'CHANNEL' in info.keys():
-					if info['CHANNEL'][0]['@record'] == '1':
-						chs +=1
-		return chs
+	return 64
+	# d = etree_to_dict(xml.etree.ElementTree.parse(os.path.join(path,'settings.xml')).getroot())
+	# chs =0
+	# if from_templates:
+	# 	return np.load(open(os.path.join(path,'templates.npy'))).shape[-1]
+	# if d['SETTINGS'][1]['SIGNALCHAIN'][0]['@name'] == 'Sources/Neuropix':
+	# 	for info in d['SETTINGS'][1]['SIGNALCHAIN'][0]['PROCESSOR'][:385]:
+	# 		if 'CHANNEL' in info.keys():
+	# 			if info['CHANNEL'][0]['@record'] == '1':
+	# 				chs +=1
+	# 	return chs
+	# if d['SETTINGS'][1]['SIGNALCHAIN'][0]['@name'] == 'Sources/Rhythm FPGA':
+	# 	if from_channel_map:
+	# 		for nm in d['SETTINGS'][1]['SIGNALCHAIN']:
+	# 			name = nm['@name']
+	# 			if name == 'Filters/Channel Map':
+	# 				#chs = np.shape(d['SETTINGS'][1]['SIGNALCHAIN'][0]['PROCESSOR'][0]['CHANNEL_INFO'])[0]
+	# 				for info in nm['PROCESSOR']:
+	# 					if 'CHANNEL' in info.keys():
+	# 						if info['CHANNEL'][0]['@record'] == '1':
+	# 							chs +=1
+	# 	else:
+	# 		for info in d['SETTINGS'][1]['SIGNALCHAIN'][0]['PROCESSOR'][:385]:
+	# 			if 'CHANNEL' in info.keys():
+	# 				if info['CHANNEL'][0]['@record'] == '1':
+	# 					chs +=1
+	# 	return chs
 
 
 
