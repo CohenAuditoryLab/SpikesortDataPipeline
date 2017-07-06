@@ -63,7 +63,7 @@ function sorting_metrics = sorting_metrics(data_dir_or_file, data_type, new_dire
 % %% 0 lag pair-wise correlation matrix with a threshold
     pairwise_corr;
 % %% Cross Correlograms
-%    cross_corr;
+    cross_corr;
 % %% Refractory period violations vector (ISI)
     isi_violations;
 % %% Autocorrelation; false positive matrix
