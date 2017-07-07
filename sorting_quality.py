@@ -45,6 +45,7 @@ def read_cluster_groups_CSV(directory):
     else:
         if os.path.isfile(os.path.join(directory,'cluster_groups.csv')):
             cluster_id = [row for row in csv.reader(open(os.path.join(directory,'cluster_groups.csv')))][1:];
+            #print(cluster_id);
         else:
             print('could not find cluster groups csv or tsv')
             return None
@@ -113,7 +114,7 @@ def probe_waveforms(rawdata,times,pre=0.5,post=1.5,channels=384,sampling_rate=30
             probe_waveform[i,:,:] = 0.#np.zeros((len(times),int(((pre+post)/1000.)*sampling_rate)))
     return probe_waveform.T
 
-def load_phy_template(path,site_positions = option234_positions,**kwargs):
+def load_phy_template(path,site_positions = option234_positions, no_csv = False, **kwargs):
 # load spike data that has been manually sorted with the phy-template GUI
 # the site_positions should contain coordinates of the channels in probe space. for example, in um on the face of the probe
 # returns a dictionary of 'good' units, each of which includes:
@@ -127,7 +128,14 @@ def load_phy_template(path,site_positions = option234_positions,**kwargs):
     templates = np.load(open(os.path.join(path,'templates.npy')))
     cluster_id = [];
     #[cluster_id.append(row) for row in csv.reader(open(os.path.join(path,'cluster_group.tsv')))];
-    if os.path.isfile(os.path.join(path,'cluster_group.tsv')):
+    if no_csv:
+        clusters_to_use = np.unique(clusters)
+        charar = np.chararray((1, len(clusters_to_use)), itemsize=9)
+        charar[:] = '\tunsorted'
+        cluster_id = np.array(map(str, clusters_to_use)) + charar
+        cluster_id = np.transpose(cluster_id)
+        print('what')
+    elif os.path.isfile(os.path.join(path,'cluster_group.tsv')):
         cluster_id = [row for row in csv.reader(open(os.path.join(path,'cluster_group.tsv')))][1:];
     else:
         if os.path.isfile(os.path.join(path,'cluster_groups.csv')):
@@ -228,12 +236,12 @@ def isiViolations(directory,time_limits=None,tr=.0015,tc=0):
     
     return cluster_IDs,isiV
     
-def cluster_signalToNoise(directory,time_limits=None,filename='experiment1_100-0_0.dat',sigma=5.,number_to_average=250,plots=False):
+def cluster_signalToNoise(directory,time_limits=None,filename='experiment1_100-0_0.dat',sigma=5.,number_to_average=250,plots=False,no_csv=False):
     spike_clusters_path = os.path.join(directory,'spike_clusters.npy')
     spike_templates_path = os.path.join(directory,'spike_templates.npy')
     spike_times_path = os.path.join(directory,'spike_times.npy')
     params_path = os.path.join(directory,'params.py')
-    
+
     if time_limits == None:
         time_limits=[0,1e7]
 
@@ -247,17 +255,17 @@ def cluster_signalToNoise(directory,time_limits=None,filename='experiment1_100-0
         rawdata = np.memmap(os.path.join(directory,filename), dtype=np.int16, mode='r')
     except:
         print 'could not load spike data. is the filename correct? (default: experiment1_100-0_0.dat)'
-        return None
+        #return None
     spike_templates = np.load(spike_templates_path)
     templates = np.load(os.path.join(directory,'templates.npy'))
-    
+
     params = read_kilosort_params(params_path)
     spike_times = np.load(spike_times_path) / float(params['sample_rate'])
     channels = 64 #get_channel_count(directory)
-    
+
     site_positions=option234_positions[np.linspace(0,channels-1,channels).astype(int)]
-    data = load_phy_template(directory,site_positions)
-   
+    data = load_phy_template(directory,site_positions, no_csv)
+
     print 'computing Quian Quiroga signal/noise ratio...'
     cluster_IDs = np.unique(spike_clusters)
     sn_peak = np.zeros(np.shape(cluster_IDs)[0])
