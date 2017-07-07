@@ -1,0 +1,5 @@
+.idea/
+.idea/*
+*.pyc
+!__init__.pyc
+!*__.pyc

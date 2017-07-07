@@ -56,6 +56,7 @@
             axis([0 numel(violations) 0 inf]);
             xlabel('Clusters');
             xticklabels(active_clusters);
+            set(gca,'XTickLabelRotation',90)
             ylabel('ISI Violations/Spikes');
             title('ISI Refractory Violations per Spike Rate');
             saveas(f, [new_directory slash 'isi__refractory_violations_per_spike.png']); close all;

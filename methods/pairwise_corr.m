@@ -12,7 +12,8 @@
     ylabels = strcat(num2str(active_clusters(row_col(:,1))),'&',num2str(active_clusters(row_col(:,2))));
     g = heatmap(A(idx), [], ylabels, A(idx), 'Colorbar', 'true', 'ShowAllTicks', true); 
     %a = gca; a.YTick = 1:numel(row);
-    ylabel('Clusters'); xlabel('Pearson R value');
+    ylabel('Clusters'); xlabel('Pearson R value');    
+    a = get(gca,'YTickLabel');set(gca,'YTickLabel',a,'FontName','Times','fontsize',6);
     title([num2str(numel(row_col(:,1))) ' Significant Pair-Wise 0-Lag Correlations (p<.05)']);
     saveas(g, [new_directory slash 'pairwisecorr_0lag_sig.png']);
     close all;
@@ -23,6 +24,7 @@
     A(1:n+1:n*n) = 0;
     h = heatmap(A, active_clusters, active_clusters,p, 'Colorbar', 'true', 'ShowAllTicks', true);
     title('0 Lag Pair-Wise Correlation Matrix'); xlabel('Clusters'); ylabel('Clusters');
+    set(gca,'XTickLabelRotation',90);
     saveas(h, [new_directory slash 'pairwisecorr_0lag.png']);
     disp('Saved 0 lag pair-wise correlation matrix.');
     close all;
