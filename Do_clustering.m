@@ -361,12 +361,17 @@ if make_plots
             plot(spikes(class(1:max_spikes),:)','color',color(mod(i-1,maxc)+1,:)); 
             xlim([1 size(spikes,2)]);
             hold on;
+	    
+	    key = 'channel';
+	    index = strfind(filename, key); %gives beginning of word channel
+	    d = strfind(filename, '.'); %gives position of .mat 
+	    
             plot(spikes(class(1:max_spikes),:)','color',color(mod(i-1,maxc)+1,:)); 
             plot(mean(spikes(class,:),1),'k','linewidth',2)
             xlim([1 size(spikes,2)]); 
-            title(['Cluster ' num2str(i) ': # ' num2str(length(class)) ' (' num2str(nnz(classes(:)==i & ~forced(:))) ')'],'Fontweight','bold')
+            title(['Channel' filename(index+6:d) 'Cluster ' num2str(i) ': # ' num2str(length(class)) ' (' num2str(nnz(classes(:)==i & ~forced(:))) ')'],'Fontweight','bold')
             ylimit = [ylimit;ylim];
-            print(indiv_fig,'-dpng',['cluster_' filename(end-7:end) '_' num2str(i) '.png'],resolution);
+            print(indiv_fig,'-dpng',['cluster_' filename(index+6:d) '_' num2str(i) '.png'],resolution);
             
         end
 
