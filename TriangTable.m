@@ -1,11 +1,14 @@
-function data = TriangTable(v)
+function data = TriangTable(metpath)
 
-matrix = hankel(double(v));
-data = cell(size(matrix,1), length(v));
+load([metpath filesep 'pairwise_corr_result.mat']);
+tri = tril(corr_result.pearson_Rs);
 
-for i = 1:size(matrix,1)
-    row = matrix(i, :);
-    newrow = row([true, row(2:end) ~= 0]);
+data = cell(size(tri));
+
+for i = 1:size(tri, 1)
+    row = tri(i, :);
+    ind = find(row == 1);
+    newrow = row(1:ind(end) - 1);
     data(i, 1:length(newrow)) = mat2cell(newrow, [1], ones(1,size(newrow,2)));
 end 
 

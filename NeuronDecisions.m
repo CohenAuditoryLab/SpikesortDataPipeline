@@ -1,24 +1,32 @@
 function NeuronDecisions(varargin)
 %% Handle variable argument numbers for automated vs. manual options
 
-if nargin < 2 
+if nargin < 2
     wave_or_kilo = questdlg('Is your data from WaveClus or KiloSort?',...
         'Wave or Kilo?','wave','kilo','wave');
-    disp('Select data path')
+    disp('Select data file')
     [fname,fpath] = uigetfile();
     fpath = fullfile(fpath,fname);
     display(fpath);
     disp('Select save path')
-    %save path should be base folder containing kilosort and waveclus
-    %subfolders
     new_directory = uigetdir();
-else 
+    disp(new_directory);
+    metrics = questdlg('Would you like to select a different folder for metrics?',...
+        'Metrics Folder','Yes','No','No');
+    if strcmp(metrics, 'Yes')
+        disp('Select the metrics folder');
+        metrics = uigetdir();
+    else
+        metrics = [new_directory filesep 'Metrics'];
+    end
+    disp(metrics);
+else
     fpath = varargin{1};
     new_directory = varargin{2};
     wave_or_kilo = varargin{3};
 end
-%% Load data and initialize figure/table/table callback 
-    
+%% Load data and initialize figure/table/table callback
+
 output = load(fpath);
 g = output.standard_output;
 f = figure('Color', 'White');
@@ -27,7 +35,7 @@ pos = f.Position;
 ax = axes('Visible', 'off');
 t = uitable(f, 'CellSelectionCallback', @cellSelect);
 
-%% UI for selecting clusters and button for submitting 
+%% UI for selecting clusters and button for submitting
 
 clusters = unique(g(:,1));
 d = cell(length(clusters), 2);
@@ -64,27 +72,31 @@ button.Position(3) = 119;
 
 %% Images to be displayed on home screen
 
-isi = axes('Units', 'Pixels','Position', [(t.Position(3)+100)  pos(4) 450 350]);
-imisi = imread([new_directory filesep 'kilo_output_metrics' filesep 'isi__high_violators.png']);
-figure(f); axes(isi); image(imisi); axis tight; axis off;
+try
+    isi = axes('Units', 'Pixels','Position', ...
+        [(t.Position(3)+100)  pos(4) 450 350], 'Visible', 'Off');
+    imisi = imread([metrics filesep 'isi__high_violators.png']);
+    figure(f); axes(isi); image(imisi); axis tight;
+catch   
+end 
 
 autocor = axes('Units', 'Pixels', 'Position', [(t.Position(3) + 100) 0 450 350]);
-imauto = imread([new_directory filesep 'kilo_output_metrics' filesep 'pairwisecorr_0lag_sig.png']);
+imauto = imread([metrics filesep 'pairwisecorr_0lag_sig.png']);
 figure(f); axes(autocor); image(imauto); axis tight; axis off;
 
-%% Triangular matrix table and figure initialization and formatting 
+%% Triangular matrix table and figure initialization and formatting
 
 ftri = figure();
 set(ftri, 'name','Correlations Matrix');
-triang = TriangTable(clusters);
+triang = TriangTable(metrics);
 
-tritab = uitable(ftri, 'Data', triang(2:end, :));
+tritab = uitable(ftri, 'Data', triang);
 set(ftri, 'WindowStyle', 'docked');
-tritab.RowName = triang(1,:);
-tritab.ColumnName = [];
+tritab.RowName = clusters;
+tritab.ColumnName = clusters;
 
 set(tritab, 'units', 'normalized', 'position', [0 0 1 1], 'CellSelectionCallback', @triSelect);
-%% Listbox intialization and formatting 
+%% Listbox intialization and formatting
 
 otherfiles = {'autocorr__autocorr_valley_r.png', 'autocorr_diff_halves.png', ...
     'drift__frate_slope.png', 'drift__frate.png', 'isi__refractory_violations_per_spike.png', ...
@@ -92,6 +104,13 @@ otherfiles = {'autocorr__autocorr_valley_r.png', 'autocorr_diff_halves.png', ...
 figure(f);
 lb = uicontrol('Style', 'listbox','Position',[(isi.Position(3) + isi.Position(1) + 10)...
     1.45*pos(4) 200 100],'string',otherfiles,'Max', 2, 'Callback',@listboxImage);
+
+%% Set up axes for additional main screen graphs
+
+extra1 = axes('Units', 'Pixels', 'Visible', 'Off', 'Position', ...
+    [(lb.Position(1) + lb.Position(3) + 10) isi.Position(2) 450 350]);
+extra2 = axes('Units', 'Pixels', 'Visible', 'Off', 'Position', ...
+    [(lb.Position(1) + lb.Position(3) + 10) 0 450 350]);
 
 %% Callback functions
 
@@ -116,60 +135,55 @@ lb = uicontrol('Style', 'listbox','Position',[(isi.Position(3) + isi.Position(1)
         c = selected{1};
         dot = strfind(c, '.');
         
-%         if strcmp(wave_or_kilo, 'wave')
-%             imfile = ['cluster_' c(1:dot-1) '_' c(dot+1:end) '.png'];
-%             imsorted = imread([new_directory filesep 'WaveClus' filesep imfile]);
-%         elseif strcmp(wave_or_kilo, 'kilo')
-%             imfile = ['cluster_' c '.png'];
-%             imsorted = imread([new_directory filesep 'KiloSort' filesep imfile]);
-%         end
-%         f1 = figure();
-%         set(f1, 'WindowStyle','docked', 'name', 'Waveform');
-%         figure(f1); image(imsorted); axis off; axis tight;
+        %         if strcmp(wave_or_kilo, 'wave')
+        %             imfile = ['cluster_' c(1:dot-1) '_' c(dot+1:end) '.png'];
+        %             imsorted = imread([new_directory filesep 'WaveClus' filesep imfile]);
+        %         elseif strcmp(wave_or_kilo, 'kilo')
+        %             imfile = ['cluster_' c '.png'];
+        %             imsorted = imread([new_directory filesep 'KiloSort' filesep imfile]);
+        %         end
+        %         f1 = figure();
+        %         set(f1, 'WindowStyle','docked', 'name', 'Waveform');
+        %         figure(f1); image(imsorted); axis off; axis tight;
         
-        imisidis = imread([new_directory filesep 'kilo_output_metrics' filesep 'isi_distributions' filesep 'isi__distribution_' c '.png']);
+        imisidis = imread([metrics filesep 'isi_distributions' filesep 'isi__distribution_' c '.png']);
         f2 = figure();
         set(f2, 'WindowStyle','docked','name','ISI Distribution');
         figure(f2); image(imisidis); axis off; axis tight;
         
-        imaut = imread([new_directory filesep 'kilo_output_metrics' filesep 'autocorrelations' filesep 'autocorr_cluster' c '.png']);
-        %imread([new_directory filesep 'kilo_output_metrics' filesep 'autocorrelations' filesep 'autocorr_cluster' c '.png']);
+        imaut = imread([metrics filesep 'autocorrelations' filesep 'autocorr_cluster' c '.png']);
+        %imread([metrics filesep 'autocorrelations' filesep 'autocorr_cluster' c '.png']);
         f3 = figure();
         set(f3, 'WindowStyle','docked','name','Autocorrelelogram');
         figure(f3); image(imaut); axis off; axis tight;
-    end 
+    end
 
     function triSelect(hObj,event)
-        headings = cell2mat(triang(1, :));
-        
-        n1 = headings(event.Indices(1));
-        
-        n = find(headings == n1);
-        m = find(cell2mat(tritab.Data(1, :)) == cell2mat(tritab.Data(event.Indices(2))));
-        n2 = tritab.Data(n,m);
-        n2 = n2{1};
-        
-        imcor = imread([new_directory filesep 'kilo_output_metrics' filesep ...
-            'cross_correlograms' filesep 'xcorr_' num2str(n1) '_' num2str(n2) '.png']);
-        fcor = figure('WindowStyle', 'docked', 'name', 'Cross Correlelogram');
-        figure(fcor); image(imcor); axis off; axis tight;
+        try
+            n1 = clusters(event.Indices(2));
+            n2 = clusters(event.Indices(1));
+            
+            imcor = imread([metrics filesep 'cross_correlograms' filesep ...
+                'xcorr_' num2str(n1) '_' num2str(n2) '.png']);
+            fcor = figure('WindowStyle', 'docked', 'name', 'Cross Correlelogram');
+            figure(fcor); image(imcor); axis off; axis tight;
+        catch
+            msg = msgbox('This cross correlelogram was not computed.', 'Error');
+        end
     end
 
     function listboxImage(hObj, event)
         e = event.Source.String(event.Source.Value);
-        
-        extra1 = axes('Units', 'Pixels', 'Visible', 'Off', 'Position', ...
-            [(lb.Position(1) + lb.Position(3) + 10) isi.Position(2) 450 350]);
-        imextra1 = imread([new_directory filesep 'kilo_output_metrics' filesep e{1}]);
+
+        cla(extra1); 
+        imextra1 = imread([metrics filesep e{1}]);
         figure(f); axes(extra1); image(imextra1); axis tight; axis off;
         
-        
         if length(e) > 1
-            extra2 = axes('Units', 'Pixels', 'Visible', 'Off', 'Position', ...
-                [(lb.Position(1) + lb.Position(3) + 10) 0 450 350]);
-            imextra2 = imread([new_directory filesep 'kilo_output_metrics' filesep e{2}]);
+            cla(extra2);
+            imextra2 = imread([metrics filesep e{2}]);
             figure(f); axes(extra2); image(imextra2); axis tight; axis off;
         end
-    end 
+    end
 
 end
