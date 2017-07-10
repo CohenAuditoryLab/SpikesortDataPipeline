@@ -5,6 +5,8 @@
     disp('Computing 0-lag pair-wise correlation matrix.');
     n = size(spikes_by_bin',2);
     [A,p] = corrcoef(spikes_by_bin');
+    corr_result = struct; corr_result.cluster_IDs = active_clusters; corr_result.pearson_Rs = A; corr_result.corr_p_values = p;
+    save([new_directory slash 'pairwise_corr_result.mat'], 'corr_result');
     % save significant correlations figure
     [row,col] = find(triu(p,1) < 0.05 & triu(p,1) ~=0);
     row_col = unique(sort(horzcat(row,col)), 'rows');
