@@ -1,5 +1,6 @@
 function NeuronDecisions(varargin)
 %% Handle variable argument numbers for automated vs. manual options
+
 if nargin < 2 
     wave_or_kilo = questdlg('Is your data from WaveClus or KiloSort?',...
         'Wave or Kilo?','wave','kilo','wave');
@@ -65,11 +66,11 @@ button.Position(3) = 119;
 
 isi = axes('Units', 'Pixels','Position', [(t.Position(3)+100)  pos(4) 450 350]);
 imisi = imread([new_directory filesep 'kilo_output_metrics' filesep 'isi__high_violators.png']);
-figure(f); image(imisi); axis tight; axis off;
+figure(f); axes(isi); image(imisi); axis tight; axis off;
 
 autocor = axes('Units', 'Pixels', 'Position', [(t.Position(3) + 100) 0 450 350]);
 imauto = imread([new_directory filesep 'kilo_output_metrics' filesep 'pairwisecorr_0lag_sig.png']);
-figure(f); image(imauto); axis tight; axis off;
+figure(f); axes(autocor); image(imauto); axis tight; axis off;
 
 %% Triangular matrix table and figure initialization and formatting 
 
@@ -83,6 +84,14 @@ tritab.RowName = triang(1,:);
 tritab.ColumnName = [];
 
 set(tritab, 'units', 'normalized', 'position', [0 0 1 1], 'CellSelectionCallback', @triSelect);
+%% Listbox intialization and formatting 
+
+otherfiles = {'autocorr__autocorr_valley_r.png', 'autocorr_diff_halves.png', ...
+    'drift__frate_slope.png', 'drift__frate.png', 'isi__refractory_violations_per_spike.png', ...
+    'pairwisecorr_0lag.png'};
+figure(f);
+lb = uicontrol('Style', 'listbox','Position',[(isi.Position(3) + isi.Position(1) + 10)...
+    1.45*pos(4) 200 100],'string',otherfiles,'Max', 2, 'Callback',@listboxImage);
 
 %% Callback functions
 
@@ -107,26 +116,26 @@ set(tritab, 'units', 'normalized', 'position', [0 0 1 1], 'CellSelectionCallback
         c = selected{1};
         dot = strfind(c, '.');
         
-        if strcmp(wave_or_kilo, 'wave')
-            imfile = ['cluster_' c(1:dot-1) '_' c(dot+1:end) '.png'];
-            imsorted = imread([new_directory filesep 'WaveClus' filesep imfile]);
-        elseif strcmp(wave_or_kilo, 'kilo')
-            imfile = ['cluster_' c '.png'];
-            imsorted = imread([new_directory filesep 'KiloSort' filesep imfile]);
-        end
-        f1 = figure();
-        set(f1, 'WindowStyle','docked', 'name', 'Waveform');
-        figure(f1); image(imsorted); axis off; axis tight;
+%         if strcmp(wave_or_kilo, 'wave')
+%             imfile = ['cluster_' c(1:dot-1) '_' c(dot+1:end) '.png'];
+%             imsorted = imread([new_directory filesep 'WaveClus' filesep imfile]);
+%         elseif strcmp(wave_or_kilo, 'kilo')
+%             imfile = ['cluster_' c '.png'];
+%             imsorted = imread([new_directory filesep 'KiloSort' filesep imfile]);
+%         end
+%         f1 = figure();
+%         set(f1, 'WindowStyle','docked', 'name', 'Waveform');
+%         figure(f1); image(imsorted); axis off; axis tight;
         
-        imisidis = imread([new_directory filesep 'kilo_output_metrics' filesep 'isi_distribution_' c]);
+        imisidis = imread([new_directory filesep 'kilo_output_metrics' filesep 'isi_distributions' filesep 'isi__distribution_' c '.png']);
         f2 = figure();
         set(f2, 'WindowStyle','docked','name','ISI Distribution');
         figure(f2); image(imisidis); axis off; axis tight;
         
-        imaut = imread([new_directory filesep 'kilo_output_metrics' filesep 'autocorrelations' filesep 'autocorr_cluster0' '.png']);
+        imaut = imread([new_directory filesep 'kilo_output_metrics' filesep 'autocorrelations' filesep 'autocorr_cluster' c '.png']);
         %imread([new_directory filesep 'kilo_output_metrics' filesep 'autocorrelations' filesep 'autocorr_cluster' c '.png']);
         f3 = figure();
-        set(f3, 'WindowStyle','docked','name','Autocorrelogram');
+        set(f3, 'WindowStyle','docked','name','Autocorrelelogram');
         figure(f3); image(imaut); axis off; axis tight;
     end 
 
@@ -142,8 +151,25 @@ set(tritab, 'units', 'normalized', 'position', [0 0 1 1], 'CellSelectionCallback
         
         imcor = imread([new_directory filesep 'kilo_output_metrics' filesep ...
             'cross_correlograms' filesep 'xcorr_' num2str(n1) '_' num2str(n2) '.png']);
-        fcor = figure('WindowStyle', 'docked', 'name', 'Cross Correlogram');
+        fcor = figure('WindowStyle', 'docked', 'name', 'Cross Correlelogram');
         figure(fcor); image(imcor); axis off; axis tight;
     end
+
+    function listboxImage(hObj, event)
+        e = event.Source.String(event.Source.Value);
+        
+        extra1 = axes('Units', 'Pixels', 'Visible', 'Off', 'Position', ...
+            [(lb.Position(1) + lb.Position(3) + 10) isi.Position(2) 450 350]);
+        imextra1 = imread([new_directory filesep 'kilo_output_metrics' filesep e{1}]);
+        figure(f); axes(extra1); image(imextra1); axis tight; axis off;
+        
+        
+        if length(e) > 1
+            extra2 = axes('Units', 'Pixels', 'Visible', 'Off', 'Position', ...
+                [(lb.Position(1) + lb.Position(3) + 10) 0 450 350]);
+            imextra2 = imread([new_directory filesep 'kilo_output_metrics' filesep e{2}]);
+            figure(f); axes(extra2); image(imextra2); axis tight; axis off;
+        end
+    end 
 
 end
