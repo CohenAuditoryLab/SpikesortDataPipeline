@@ -1,4 +1,7 @@
 function NeuronDecisions(varargin)
+%First argument - full file path to .mat file containing results of metrics
+%Second argument - full path to save directory 
+%OPTIONAL Third argument - full path to metrics folder
 %% Handle variable argument numbers for automated vs. manual options
 
 if nargin < 2
@@ -7,7 +10,7 @@ if nargin < 2
     disp('Select data file')
     [fname,fpath] = uigetfile();
     fpath = fullfile(fpath,fname);
-    display(fpath);
+    disp(fpath);
     disp('Select save path')
     new_directory = uigetdir();
     disp(new_directory);
@@ -17,13 +20,16 @@ if nargin < 2
         disp('Select the metrics folder');
         metrics = uigetdir();
     else
+        %update this to be the Metrics directory on the kilosort computer
         metrics = [new_directory filesep 'Metrics'];
     end
     disp(metrics);
 else
     fpath = varargin{1};
     new_directory = varargin{2};
-    wave_or_kilo = varargin{3};
+    if nargin > 2
+        wave_or_kilo = varargin{3};
+    else
 end
 %% Load data and initialize figure/table/table callback
 
