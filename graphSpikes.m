@@ -49,7 +49,7 @@ end
 if display % user selects cluster to graph
     figClust = figure('Name','View by Cluster','NumberTitle','off');
     set(gcf,'pos',[400 200 1000 600]);
-    uicontrol('Style','listbox','Position',[10,10,50,200],'String',num2str(clusters),...
+    uicontrol('Style','listbox','Position',[10,10,50,200],'String',num2str(clusters-1),...
         'Callback',@(src,event) createClusterGrid(figClust,out,param,clusters(event.Source.Value)));
 else % graph and save all clusters
     for i = 1:size(clusters)
