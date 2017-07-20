@@ -4,6 +4,7 @@ function fig = createClusterGrid(fig,out,param,clustNum)
 extractSpk = (clustNum == out.spikeClusters(:,1));
 spk = param.peakSpikes(extractSpk,:);
 figure(fig);
+opacity = 0.1;
 
 %% bar graph of channels
 subplot(2,2,1);
@@ -71,11 +72,14 @@ for j = 1:(size(spk,1))
 
     % plot shifted waveforms
     subplot(2,2,2);
-    plot(param.sample_win_fac,y_axis,'r');
+    plt = plot(param.sample_win_fac,y_axis,'r');
+    plt.Color(4) = opacity;
     subplot(2,2,3);
-    plot(x_axis_min,y_axis,'r');
+    plt = plot(x_axis_min,y_axis,'r');
+    plt.Color(4) = opacity;
     subplot(2,2,4);
-    plot(x_axis_max,y_axis,'r');
+    plt = plot(x_axis_max,y_axis,'r');
+    plt.Color(4) = opacity;
 end
 
 %% overlay average waveforms
