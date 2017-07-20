@@ -16,7 +16,7 @@ if nargin < 2
     disp('Select save path')
     new_directory = uigetdir();
     disp(new_directory);
-    metrics = questdlg('Would you like to select a different folder for metrics?',...
+    metrics = questdlg('Would you like to select a folder for metrics other than the default?',...
         'Metrics Folder','Yes','No','No');
     if strcmp(metrics, 'Yes')
         disp('Select the metrics folder');
@@ -49,6 +49,7 @@ else
         end
     end
 end
+
 %% Load data and initialize figure/table/table callback/main tabs
 
 output = load(fpath);
@@ -87,6 +88,7 @@ button.Position(4) = 30;
 % closebutton = uicontrol('Parent', tabmain, 'Visible', 'on', 'style', 'pushbutton', ...
 %     'units', 'pixels', 'Position', [800 725 130 30], 'string', 'Close Current Tab');
 % set(closebutton, 'Callback', {@closeTabCallback});
+
 %% Data table, initial figure, button formatting
 
 t.Data = d;
@@ -106,6 +108,7 @@ set(f, 'units', 'normalized', 'position',[0 0 1 1])
 button.Position(1) = button.Position(1) + 7;
 button.Position(2) = button.Position(4);
 button.Position(3) = 119;
+
 %% Listbox intialization and formatting
 
 otherfiles = {'autocorr__autocorr_valley_r.png', 'autocorr_diff_halves.png', ...
@@ -123,6 +126,18 @@ tabmat = uitab(subtabs, 'Title', 'Correlation Matrix', 'BackgroundColor', 'white
 tabfig = uitab(subtabs, 'Title', 'Cross Correlelogram', 'BackgroundColor', 'white');
 tabfig.Parent = [];
 triang = TriangTable(metrics);
+
+%highlight text red over a particular value
+rows = size(triang, 1);
+for j = 1:rows
+    r = cell2mat(triang(j, :));
+    ind = find(abs(r) >= 0.003);
+    for k = ind
+        triang{j,k} = strcat(...
+    '<html><tr><td align=right  width=999999><span style="color: #FF0000;">', ...
+    num2str(triang{j,k}), '</span></tr></td></html>');
+    end
+end
 
 tritab = uitable(tabmat, 'Data', triang);
 tritab.RowName = clusters;
@@ -242,5 +257,4 @@ set(tritab, 'units', 'normalized', 'position', [0 0 1 1], ...
         selected = tabgp2.SelectedTab;
         delete(selected);
     end
-
 end
