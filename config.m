@@ -13,7 +13,7 @@ ops.root     = fpath; % 'openEphys' only: where raw files are
 
 %% options for channels and clustering
 ops.fs       = 24414;        % sampling rate
-ops.NchanTOT = 64;           % total number of channels
+ops.NchanTOT = num_channels; % total number of channels
 ops.Nchan    = ops.NchanTOT; % num active channels
 ops.Nfilt    = 2*ops.Nchan;  % num clusters to use (2-4x Nchan, multiple of 32)
 ops.nNeighPC = 12;           % (Phy): num channels to mask the PCs
