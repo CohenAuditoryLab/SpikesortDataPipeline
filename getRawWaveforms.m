@@ -1,5 +1,8 @@
 function out = getRawWaveforms(rez,win)
+%getRawWaveforms Returns cell array of spike times and their associated
+%clusters, waveforms, and channels
 
+% number of samples to take on either side of spike time
 if nargin < 2
     win = -35:35;
 end
@@ -21,7 +24,6 @@ spikeTemplates = rez.st3(:,2);
 % get raw data around spiketimes
 WAVE = NaN(size(dat,1),numel(win),numel(spikeTimes));
 for i = 1:length(spikeTimes)
-   disp(i);
    spkwin = spikeTimes(i) + win;
    WAVE(:,:,i) = dat(:,max(min(spkwin,size(dat,2)),1));
 end
@@ -49,3 +51,4 @@ out.spikeTimes    = spikeTimes;
 out.spikeClusters = spikeClusters;
 out.spikeWaves    = WAVE;
 out.peakChannel   = peakChannel;
+end
