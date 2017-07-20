@@ -1,7 +1,9 @@
 function NeuronDecisions(varargin)
 %First argument - full file path to .mat file containing results of metrics
-%Second argument - full path to save directory 
-%OPTIONAL Third argument - full path to metrics folder
+%Second argument - full path to save directory
+%OPTIONAL Third argument - 'wave' or 'kilo' (lack of this will prompt user
+%in dialog box)
+%OPTIONAL Fourth argument - path to metrics folder
 %% Handle variable argument numbers for automated vs. manual options
 
 if nargin < 2
@@ -30,16 +32,43 @@ else
     if nargin > 2
         wave_or_kilo = varargin{3};
     else
+        wave_or_kilo = questdlg('Is your data from WaveClus or KiloSort?',...
+            'Wave or Kilo?','wave','kilo','wave');
+    end
+    if nargin > 3
+        metrics = varargin{4};
+    else
+        metrics = questdlg('Would you like to select a folder for metrics other than the default?',...
+            'Metrics Folder','Yes','No','No');
+        if strcmp(metrics, 'Yes')
+            disp('Select the metrics folder');
+            metrics = uigetdir();
+        else
+            %update this to be the Metrics directory on the kilosort computer
+            metrics = [new_directory filesep 'Metrics'];
+        end
+    end
 end
-%% Load data and initialize figure/table/table callback
+%% Load data and initialize figure/table/table callback/main tabs
 
 output = load(fpath);
 g = output.standard_output;
-f = figure('Color', 'White');
-set(f, 'name','Neuron Decisions');
+f = figure('Name', 'Neuron Decisions');
 pos = f.Position;
-ax = axes('Visible', 'off');
-t = uitable(f, 'CellSelectionCallback', @cellSelect);
+
+tabgp = uitabgroup(f);
+tabmain = uitab(tabgp, 'Title', 'Select Neurons', 'BackgroundColor', 'White');
+tabgp2 = uitabgroup(tabmain, 'Units', 'Pixels', 'Position', [400 20 900 700]);
+tablb = uitab(tabgp2, 'Title', 'Metrics');
+wavtab = uitab(tabgp2, 'Title', 'Waveform');
+isitab = uitab(tabgp2, 'Title', 'ISI');
+auttab = uitab(tabgp2, 'Title', 'Autocorrelations');
+wavtab.Parent = [];
+tablb.Parent = [];
+isitab.Parent = [];
+auttab.Parent = [];
+
+t = uitable(tabmain, 'CellSelectionCallback', @cellSelect);
 
 %% UI for selecting clusters and button for submitting
 
@@ -50,12 +79,14 @@ for j = 1:length(clusters)
     d(j, 1:2) = {num2str(clusters(j)), true};
 end
 
-figure(f);
-button = uicontrol('Visible', 'on', 'style','pushbutton','units', ...
-    'pixels','string','Submit');
+button = uicontrol('Parent', tabmain, 'Visible', 'on', ...
+    'style','pushbutton','units', 'pixels','string','Submit');
 set(button, 'Callback', {@callback});
 button.Position(4) = 30;
 
+% closebutton = uicontrol('Parent', tabmain, 'Visible', 'on', 'style', 'pushbutton', ...
+%     'units', 'pixels', 'Position', [800 725 130 30], 'string', 'Close Current Tab');
+% set(closebutton, 'Callback', {@closeTabCallback});
 %% Data table, initial figure, button formatting
 
 t.Data = d;
@@ -70,53 +101,36 @@ t.Position(2) = button.Position(4) + 50;
 
 f.Position(3) = 157 * 5;
 f.Position(4) = 2 * pos(4);
-set(f, 'WindowStyle','docked');
 set(f, 'units', 'normalized', 'position',[0 0 1 1])
 
+button.Position(1) = button.Position(1) + 7;
 button.Position(2) = button.Position(4);
 button.Position(3) = 119;
-
-%% Images to be displayed on home screen
-
-try
-    isi = axes('Units', 'Pixels','Position', ...
-        [(t.Position(3)+100)  pos(4) 450 350], 'Visible', 'Off');
-    imisi = imread([metrics filesep 'isi__high_violators.png']);
-    figure(f); axes(isi); image(imisi); axis tight;
-catch   
-end 
-
-autocor = axes('Units', 'Pixels', 'Position', [(t.Position(3) + 100) 0 450 350]);
-imauto = imread([metrics filesep 'pairwisecorr_0lag_sig.png']);
-figure(f); axes(autocor); image(imauto); axis tight; axis off;
-
-%% Triangular matrix table and figure initialization and formatting
-
-ftri = figure();
-set(ftri, 'name','Correlations Matrix');
-triang = TriangTable(metrics);
-
-tritab = uitable(ftri, 'Data', triang);
-set(ftri, 'WindowStyle', 'docked');
-tritab.RowName = clusters;
-tritab.ColumnName = clusters;
-
-set(tritab, 'units', 'normalized', 'position', [0 0 1 1], 'CellSelectionCallback', @triSelect);
 %% Listbox intialization and formatting
 
 otherfiles = {'autocorr__autocorr_valley_r.png', 'autocorr_diff_halves.png', ...
     'drift__frate_slope.png', 'drift__frate.png', 'isi__refractory_violations_per_spike.png', ...
-    'pairwisecorr_0lag.png'};
-figure(f);
-lb = uicontrol('Style', 'listbox','Position',[(isi.Position(3) + isi.Position(1) + 10)...
-    1.45*pos(4) 200 100],'string',otherfiles,'Max', 2, 'Callback',@listboxImage);
+    'pairwisecorr_0lag.png', 'pairwisecorr_0lag_sig.png', 'isi__high_violators.png'};
+lb = uicontrol('Style', 'listbox', 'Parent', tabmain, 'Position',...
+    [(t.Position(3) + 50) t.Position(1) 200 150],'string',...
+    otherfiles,'Max', 2, 'Callback',@listboxImage);
 
-%% Set up axes for additional main screen graphs
+%% Triangular matrix table and tab initialization and formatting
 
-extra1 = axes('Units', 'Pixels', 'Visible', 'Off', 'Position', ...
-    [(lb.Position(1) + lb.Position(3) + 10) isi.Position(2) 450 350]);
-extra2 = axes('Units', 'Pixels', 'Visible', 'Off', 'Position', ...
-    [(lb.Position(1) + lb.Position(3) + 10) 0 450 350]);
+tabtri = uitab(tabgp, 'Title', 'Neuron Correlations', 'BackgroundColor', 'white');
+subtabs = uitabgroup(tabtri, 'Units', 'Normalized', 'Position', [0 0 1 1]);
+tabmat = uitab(subtabs, 'Title', 'Correlation Matrix', 'BackgroundColor', 'white');
+tabfig = uitab(subtabs, 'Title', 'Cross Correlelogram', 'BackgroundColor', 'white');
+tabfig.Parent = [];
+triang = TriangTable(metrics);
+
+tritab = uitable(tabmat, 'Data', triang);
+tritab.RowName = clusters;
+tritab.ColumnName = clusters;
+
+%set(tritab, 'CellSelectionCallback', @triSelect);
+set(tritab, 'units', 'normalized', 'position', [0 0 1 1], ...
+    'CellSelectionCallback', @triSelect);
 
 %% Callback functions
 
@@ -137,31 +151,52 @@ extra2 = axes('Units', 'Pixels', 'Visible', 'Off', 'Position', ...
     end
 
     function cellSelect(hObj,event)
-        selected = t.Data(event.Indices(1), :);
-        c = selected{1};
-        dot = strfind(c, '.');
         
-        %         if strcmp(wave_or_kilo, 'wave')
-        %             imfile = ['cluster_' c(1:dot-1) '_' c(dot+1:end) '.png'];
-        %             imsorted = imread([new_directory filesep 'WaveClus' filesep imfile]);
-        %         elseif strcmp(wave_or_kilo, 'kilo')
-        %             imfile = ['cluster_' c '.png'];
-        %             imsorted = imread([new_directory filesep 'KiloSort' filesep imfile]);
-        %         end
-        %         f1 = figure();
-        %         set(f1, 'WindowStyle','docked', 'name', 'Waveform');
-        %         figure(f1); image(imsorted); axis off; axis tight;
+        checkbox = event.Indices(2);
         
-        imisidis = imread([metrics filesep 'isi_distributions' filesep 'isi__distribution_' c '.png']);
-        f2 = figure();
-        set(f2, 'WindowStyle','docked','name','ISI Distribution');
-        figure(f2); image(imisidis); axis off; axis tight;
-        
-        imaut = imread([metrics filesep 'autocorrelations' filesep 'autocorr_cluster' c '.png']);
-        %imread([metrics filesep 'autocorrelations' filesep 'autocorr_cluster' c '.png']);
-        f3 = figure();
-        set(f3, 'WindowStyle','docked','name','Autocorrelelogram');
-        figure(f3); image(imaut); axis off; axis tight;
+        %only open figures if you click in the first column
+        if checkbox == 1
+            selected = t.Data(event.Indices(1), :);
+            c = selected{1};
+            dot = strfind(c, '.');
+            
+            try
+                if strcmp(wave_or_kilo, 'wave')
+                    imfile = ['cluster_' c(1:dot-1) '_' c(dot+1:end) '.png'];
+                    imsorted = imread([new_directory filesep 'WaveClus' filesep imfile]);
+                elseif strcmp(wave_or_kilo, 'kilo')
+                    imfile = ['cluster_' c '.png'];
+                    imsorted = imread([new_directory filesep 'KiloSort' filesep imfile]);
+                end
+                wavax = axes('Visible', 'Off', 'Parent', wavtab, 'Units', 'Normalized', 'Position', [0 0 1 1]);
+                set(wavtab, 'Title', ['Waveform, Neuron ' c]);
+                wavtab.Parent = tabgp2;
+                image(imsorted, 'Parent', wavax); axis off; axis tight;
+                set(wavax, 'XTick', [], 'YTick', []);
+                set(wavax, 'Visible', 'Off');
+            catch
+            end
+            
+            set(isitab, 'Title', ['ISI Distribution, Neuron ' c]);
+            imisidis = imread([metrics filesep 'isi_distributions' filesep 'isi__distribution_' c '.png']);
+            isiax = axes('Visible', 'Off', 'Parent', isitab, 'Units',...
+                'Normalized', 'Position', [0 0 1 1]);
+            isitab.Parent = tabgp2;
+            image(imisidis, 'Parent', isiax); axis off; axis tight;
+            set(isiax, 'XTick', [], 'YTick', []);
+            set(isiax, 'Visible', 'Off');
+            
+            set(auttab, 'Title', ['Autocorrelelogram, Neuron ' c]);
+            imaut = imread([metrics filesep 'autocorrelations' filesep 'autocorr_cluster' c '.png']);
+            autax = axes('Visible', 'Off', 'Parent', auttab, 'Units', ...
+                'Normalized', 'Position', [0 0 1 1]);
+            auttab.Parent = tabgp2;
+            image(imaut, 'Parent', autax); axis tight; axis off;
+            set(autax, 'XTick', [], 'YTick', []);
+            set(autax, 'Visible', 'Off');
+            
+            tabgp2.SelectedTab = isitab;
+        end
     end
 
     function triSelect(hObj,event)
@@ -171,25 +206,41 @@ extra2 = axes('Units', 'Pixels', 'Visible', 'Off', 'Position', ...
             
             imcor = imread([metrics filesep 'cross_correlograms' filesep ...
                 'xcorr_' num2str(n1) '_' num2str(n2) '.png']);
-            fcor = figure('WindowStyle', 'docked', 'name', 'Cross Correlelogram');
-            figure(fcor); image(imcor); axis off; axis tight;
+            corax = axes('Parent', tabfig, 'Units', 'Normalized', 'Visible',...
+                'Off', 'Position', [.125 0 .75 1]);
+            tabfig.Parent = subtabs;
+            image(imcor, 'Parent', corax); axis off; axis tight;
+            set(corax, 'XTick', [], 'YTick', []);
+            set(corax, 'Visible', 'Off');
+            
+            subtabs.SelectedTab = tabfig;
+            set(tabfig, 'Title', ['Neuron ' num2str(n1) ' vs. Neuron ' num2str(n2)]);
         catch
-            msg = msgbox('This cross correlelogram was not computed.', 'Error');
+            err = msgbox('This cross correlelogram was not computed.', 'Error');
         end
     end
 
     function listboxImage(hObj, event)
         e = event.Source.String(event.Source.Value);
-
-        cla(extra1); 
-        imextra1 = imread([metrics filesep e{1}]);
-        figure(f); axes(extra1); image(imextra1); axis tight; axis off;
         
-        if length(e) > 1
-            cla(extra2);
-            imextra2 = imread([metrics filesep e{2}]);
-            figure(f); axes(extra2); image(imextra2); axis tight; axis off;
+        try
+            tablb.Parent = tabgp2;
+            extra1 = axes('Parent', tablb, 'Units', 'Normalized', ...
+                'Visible', 'Off', 'Position', [0 0 1 1]);
+            imextra1 = imread([metrics filesep e{1}]);
+            axes(extra1); image(imextra1); axis tight; axis off;
+            tabgp2.SelectedTab = tablb;
+            set(extra1, 'XTick', [], 'YTick', []);
+            set(extra1, 'Visible', 'Off');
+        catch
+            msg = msgbox('This figure is not available in your metrics directory.', 'Error');
         end
+    end
+
+    function closeTabCallback(hObj, event)
+        %get current tab and delete it
+        selected = tabgp2.SelectedTab;
+        delete(selected);
     end
 
 end
