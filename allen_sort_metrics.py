@@ -68,19 +68,54 @@ def allen_sort_metrics(data_directory = '/Users/mschaff/Documents/KiloSort', out
     sio.savemat(os.path.join(new_directory, 'allen_metrics.mat'), {'struct': a_dict})
 
 
-    # d=sq.neuron_fig(clusterID=34,df=df,sortpath=data_directory,filename='/Users/mschaff/Documents/KiloSort/Jun22_17_192ch_sr25kblock4__binary.dat');
-    #
-    # # plot ISI Purity
-    # objects = ('Python', 'C++', 'Java', 'Perl', 'Scala', 'Lisp')
-    # y_pos = np.arange(len(objects))
-    # performance = [10, 8, 6, 4, 2, 1]
-    #
-    # plt.barh(y_pos, performance, align='center', alpha=0.5)
-    # plt.yticks(y_pos, objects)
-    # plt.xlabel('Usage')
-    # plt.title('Programming language usage')
-    #
-    # plt.show()
-    # plt.savefig('what.png')
+    #GRAPHS
+    y_pos = np.arange(len(df.clusterID))
 
-    return 'Generated & saved Allen Brain sorting metrics.'
+    # plot ISI Purity
+    x_items = df.isi_purity
+    plt.barh(y_pos, x_items, align='center', alpha=0.5)
+    plt.yticks(y_pos, df.clusterID)
+    plt.xlabel('ISI Purity'); plt.title('ISI Purity')
+    plt.gcf().set_size_inches(18.5, 10.5)
+    plt.savefig(os.path.join(new_directory, 'isi_purity.png'), dpi=200)
+    plt.clf()
+    # plot SNR Max
+    x_items = df.sn_max
+    plt.barh(y_pos, x_items, align='center', alpha=0.5)
+    plt.yticks(y_pos, df.clusterID)
+    plt.xlabel('SNR Max'); plt.title('SNR Max')
+    plt.gcf().set_size_inches(18.5, 10.5)
+    plt.savefig(os.path.join(new_directory, 'snr_max.png'), dpi=200)
+    plt.clf()
+    # plot SNR Mean
+    x_items = df.sn_mean
+    plt.barh(y_pos, x_items, align='center', alpha=0.5)
+    plt.yticks(y_pos, df.clusterID)
+    plt.xlabel('SNR Mean'); plt.title('SNR Mean')
+    plt.gcf().set_size_inches(18.5, 10.5)
+    plt.savefig(os.path.join(new_directory, 'snr_mean.png'), dpi=200)
+    plt.clf()
+    # plot isolation_distance
+    x_items = df.isolation_distance
+    plt.barh(y_pos, x_items, align='center', alpha=0.5)
+    plt.yticks(y_pos, df.clusterID)
+    plt.xlabel('Isolation Distance'); plt.title('Isolation Distance')
+    plt.gcf().set_size_inches(18.5, 10.5)
+    plt.savefig(os.path.join(new_directory, 'isolation_distance.png'), dpi=200)
+    plt.clf()
+    # plot Mahalanobis Contamination
+    x_items = df.mahalanobis_contamination
+    plt.barh(y_pos, x_items, align='center', alpha=0.5)
+    plt.yticks(y_pos, df.clusterID)
+    plt.xlabel('Mahalanobis Contamination'); plt.title('Mahalanobis Contamination')
+    plt.gcf().set_size_inches(18.5, 10.5)
+    plt.savefig(os.path.join(new_directory, 'mahalanobis_contamination.png'), dpi=200)
+    plt.clf()
+    # plot FLDA_dprime
+    x_items = df.FLDA_dprime
+    plt.barh(y_pos, x_items, align='center', alpha=0.5)
+    plt.yticks(y_pos, df.clusterID)
+    plt.xlabel('FLDA_dprime'); plt.title('FLDA_dprime')
+    plt.gcf().set_size_inches(18.5, 10.5)
+    plt.savefig(os.path.join(new_directory, 'FLDA_dprime.png'), dpi=200)
+    return 'Generated, plotted & saved Allen Brain sorting metrics.'
