@@ -9,7 +9,7 @@ function NeuronDecisions(varargin)
 if nargin < 2
     wave_or_kilo = questdlg('Is your data from WaveClus or KiloSort?',...
         'Wave or Kilo?','wave','kilo','wave');
-    disp('Select data file')
+    disp('Select data file');
     [fname,fpath] = uigetfile();
     fpath = fullfile(fpath,fname);
     disp(fpath);
@@ -125,7 +125,18 @@ subtabs = uitabgroup(tabtri, 'Units', 'Normalized', 'Position', [0 0 1 1]);
 tabmat = uitab(subtabs, 'Title', 'Correlation Matrix', 'BackgroundColor', 'white');
 tabfig = uitab(subtabs, 'Title', 'Cross Correlelogram', 'BackgroundColor', 'white');
 tabfig.Parent = [];
-triang = TriangTable(metrics);
+%triang = TriangTable(metrics);
+
+cr = load([metrics filesep 'pairwise_corr_result.mat']);
+tri = tril(cr.corr_result.pearson_Rs);
+triang = cell(size(tri));
+
+for i = 1:size(tri, 1)
+    row = tri(i, :);
+    ind = find(row == 1);
+    newrow = row(1:ind(end) - 1);
+    triang(i, 1:length(newrow)) = mat2cell(newrow, [1], ones(1,size(newrow,2)));
+end 
 
 %highlight text red over a particular value
 rows = size(triang, 1);
@@ -178,9 +189,11 @@ set(tritab, 'units', 'normalized', 'position', [0 0 1 1], ...
             try
                 if strcmp(wave_or_kilo, 'wave')
                     imfile = ['cluster_' c(1:dot-1) '_' c(dot+1:end) '.png'];
+                    %THIS PATH MIGHT NEED TO BE MODIFIED.
                     imsorted = imread([new_directory filesep 'WaveClus' filesep imfile]);
                 elseif strcmp(wave_or_kilo, 'kilo')
                     imfile = ['cluster_' c '.png'];
+                    %THIS PATH MIGHT NEED TO BE MODIFIED.
                     imsorted = imread([new_directory filesep 'KiloSort' filesep imfile]);
                 end
                 wavax = axes('Visible', 'Off', 'Parent', wavtab, 'Units', 'Normalized', 'Position', [0 0 1 1]);
