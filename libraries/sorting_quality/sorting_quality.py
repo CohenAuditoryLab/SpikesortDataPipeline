@@ -718,7 +718,7 @@ def get_PCs(datapath,channel,times,PC=1,pre=0.5,post=1.5,channels=384,sampling_r
 
 def neuron_fig(clusterID,df,sortpath,filename='experiment1_102-0_0.dat',time_limits=None,timeplot_binsize=60.,neighbor_colors=["#67572e","#50a874","#ff4d4d"]):
 
-    channels = get_channel_count(sortpath)
+    channels = 64#get_channel_count(sortpath)
     site_positions=option234_positions[np.linspace(0,channels-1,channels).astype(int)]
     data = load_phy_template(sortpath,site_positions)
     
