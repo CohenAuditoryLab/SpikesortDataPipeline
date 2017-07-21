@@ -142,7 +142,7 @@ end
 rows = size(triang, 1);
 for j = 1:rows
     r = cell2mat(triang(j, :));
-    ind = find(abs(r) >= 0.003);
+    ind = find(abs(r) >= 0.005);
     for k = ind
         triang{j,k} = strcat(...
     '<html><tr><td align=right  width=999999><span style="color: #FF0000;">', ...
