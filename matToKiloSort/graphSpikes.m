@@ -3,7 +3,7 @@ function graphSpikes(fpath,rez)
 %   graphSpikes() prompts the user to select a rez file and will
 %   display user-selected cluster grids. Used for viewing graphs only.
 %   
-%   graphSpikes(fpath) prompts the user to select a rez file and saves all
+%   graphSpikes(fpath) loads the rez file located in fpath and saves all
 %   generated cluster grids to fpath. Used for manual generation of graphs.
 %   
 %   graphSpikes(fpath,rez) uses the provided rez file to create cluster
@@ -12,14 +12,15 @@ function graphSpikes(fpath,rez)
 
 %% initialize variables and extract spikes
 
-if nargin < 2
-    [fname,path] = uigetfile('D:\SpikeSortingPipeline\Sorted\*.mat','Select a rez file');
-    load(fullfile(path,fname),'rez');
-end
 if nargin < 1
     display = 1;
+    [fname,fpath] = uigetfile('D:\SpikeSortingPipeline\Sorted\*.mat','Select a rez file');
+    load(fullfile(fpath,fname),'rez');
 else
     display = 0;
+    if nargin < 2
+        load(fullfile(fpath,'rez.mat'),'rez');
+    end
     cd(fpath);
 end
 
@@ -52,7 +53,8 @@ if display % user selects cluster to graph
     uicontrol('Style','listbox','Position',[10,10,50,200],'String',num2str(clusters-1),...
         'Callback',@(src,event) createClusterGrid(figClust,out,param,clusters(event.Source.Value)));
 else % graph and save all clusters
-    for i = 1:size(clusters)
+    tic;
+    parfor i = 1:size(clusters,1)
         clustNum = clusters(i);
         fig = figure();
         set(gcf,'pos',[400 200 1000 600]);
@@ -60,6 +62,7 @@ else % graph and save all clusters
         saveas(fig,['cluster_',num2str(clustNum-1),'.png']);
         close(fig);
     end
+    fprintf('graphSpikes took %2.2f minutes to run \n', floor(toc/0.6)/100);
 end
 
 end
