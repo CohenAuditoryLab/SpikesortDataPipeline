@@ -24,27 +24,18 @@ end
 
 if minpeakdist>1
     while 1
-
         del=diff(locs)<minpeakdist;
-
         if ~any(del), break; end
-
         pks=x(locs);
-
         [garb mins]=min([pks(del) ; pks([false del])]); %#ok<ASGLU>
-
         deln=find(del);
-
         deln=[deln(mins==1) deln(mins==2)+1];
-
         locs(deln)=[];
-
     end
 end
 
 if nargout>1,
     pks=x(locs);
 end
-
 
 end
