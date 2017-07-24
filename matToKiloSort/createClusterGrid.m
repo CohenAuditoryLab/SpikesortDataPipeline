@@ -23,7 +23,7 @@ subplot(2,2,2);
 cla;
 hold on;
 title(['Cluster ' num2str(clustNum-1) ': Raw Data']);
-axis([param.view_win_fac(1) param.view_win_fac(end) -175 175]);
+axis([param.view_win_fac(1) param.view_win_fac(end) -inf inf]);
 xlabel('time since spike detection (ms)');
 
 % centered around min
@@ -31,7 +31,7 @@ subplot(2,2,3);
 cla;
 hold on;
 title(['Cluster ' num2str(clustNum-1) ': Centered to Min']);
-axis([param.view_win_fac(1) param.view_win_fac(end) -175 175]);
+axis([param.view_win_fac(1) param.view_win_fac(end) -inf inf]);
 xlabel('time since spike min (ms)');
 % intialize average matrix, first col is running total, second is number of entries
 min_avg = zeros(size(param.view_win,2),2);
@@ -41,7 +41,7 @@ subplot(2,2,4);
 cla;
 hold on;
 title(['Cluster ' num2str(clustNum-1) ': Centered to Max']);
-axis([param.view_win_fac(1) param.view_win_fac(end) -175 175]);
+axis([param.view_win_fac(1) param.view_win_fac(end) -inf inf]);
 xlabel('time since spike max (ms)');
 % intialize average matrix, first col is running total, second is number of entries
 max_avg = zeros(size(param.view_win,2),2);
