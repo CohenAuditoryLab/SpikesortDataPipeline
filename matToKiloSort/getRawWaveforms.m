@@ -1,6 +1,6 @@
 function out = getRawWaveforms(rez,win)
 %getRawWaveforms Returns cell array of spike times and their associated
-%clusters, waveforms, and channels
+%clusters, waveforms, and channels.
 
 % number of samples to take on either side of spike time
 if nargin < 2
