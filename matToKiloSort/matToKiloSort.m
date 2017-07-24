@@ -4,14 +4,8 @@ function matToKiloSort(fbinary,fpath,num_channels)
 %   and save all data in fpath, including waveform graphs.
 %   num_channels is needed to specify the exact number of channels in the
 %   binary file.
-%
-%   matToKiloSort(fbinary,fpath) executes in the same manner as above, but
-%   will assume 64 channels.
 
 %% initialize variables
-if nargin < 3
-    num_channels = 64;
-end
 
 addpath(genpath('C:\work\KiloSort-master')) % path to kilosort folder
 addpath(genpath('C:\work\phy-master')) % path to npy-matlab scripts
@@ -47,5 +41,5 @@ delete(ops.fproc); % remove temporary file
 graphSpikes(fpath,rez);
 
 % final display of total runtime
-fprintf('KiloSort took %2.2f minutes to run \n', floor(toc/0.6)/100)
+fprintf('KiloSort took %2.2f minutes to run \n', floor(toc/0.6)/100);
 end
