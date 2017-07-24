@@ -64,7 +64,6 @@ function data = artifactThresh(data,validMask,thresh)
         end
     end
     if length(locs) > 0
-        clc
-        disp([num2str(length(locs)),' artifacts cured']);
+        clc;
     end
 end
