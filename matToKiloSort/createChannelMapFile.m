@@ -1,10 +1,6 @@
 function createChannelMapFile(fpath,Nchannels)
 %createChannelMapFile  Create a chanMap file for a KiloSort simulation.
 
-if nargin<2
-    Nchannels = 64; 
-end
-
 connected   = true(Nchannels, 1);
 chanMap     = 1:Nchannels;
 chanMap0ind = chanMap - 1;
