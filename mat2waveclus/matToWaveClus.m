@@ -47,6 +47,8 @@ for n = 1:num_channels
     clear data
 end
 
+%% save final results
+
 disp('Saving final data matrix...');
 save('all_clusters', 'allClusters');
 disp('Done!');
