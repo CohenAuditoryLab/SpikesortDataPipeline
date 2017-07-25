@@ -7,26 +7,24 @@ if nargin<5
    notch_filter=0; 
 end
 if nargin<6
-   band_filter=0'; 
+   band_filter=0; 
 end
 if nargin<7
-   band_filter=0'; 
+   band_filter=0; 
 end
 if nargin<8
-   artifact=0'; 
+   artifact=0; 
 end
 block_str=['Block-' num2str(block)];
-if ~isdir(strjoin([tank_folder '\' block_str],''))
+if ~isdir([tank_folder '\' block_str])
     error('not a valid tank/block folder')
 end
-
 if ~exist(fpath, 'dir')
     mkdir(fpath); 
 end
-
 if number_channels==64 %&& strcmp(preamp_var,'xpz5'); either var only has 64 channels
    for n=1:number_channels
-       [data]=SEV2mat(strjoin([tank_folder '\' block_str],''),'CHANNEL',n,'EVENTNAME',preamp_var);
+       [data]=SEV2mat([tank_folder '\' block_str],'CHANNEL',n,'EVENTNAME',preamp_var);
        spike_waves(n,:)=double(data.(preamp_var).data);
        fs=data.(preamp_var).fs;
    end
@@ -92,7 +90,7 @@ end
 disp([num2str(size(spike_waves,1)) ' Channels read']);
 fprintf('Time %3.2f. Reading data done!\n', toc);
 temp= strfind(tank_folder,'\');
-filename=[tank_folder(temp+1:end) 'block' num2str(block) '__binary.dat'];
+filename=[tank_folder(temp(end)+1:end) '_b' num2str(block) fpath(end-2:end) '.dat'];
 fidW = fopen(fullfile(fpath, filename), 'w');
 fwrite(fidW,spike_waves, 'int16');
 fclose(fidW);
