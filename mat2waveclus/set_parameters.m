@@ -1,7 +1,7 @@
 function par = set_parameters()
 
 % LOAD PARAMS
-par.segments_length = 10; %5;             % length (in minutes) of segments in which the data is cutted (default 5min).
+par.segments_length = 60; %5;             % length (in minutes) of segments in which the data is cutted (default 5min).
 par.sr = 30000;                      % sampling rate (in Hz). This parameter will be only used if the data file don't have a sr.
 
 
