@@ -1,4 +1,4 @@
-function mat2wavecluspolytrode(filename)
+function matToWaveClusPolytrode(filename)
 disp('Select the path for your .mat data');
 path = uigetdir();
 cd(path);
