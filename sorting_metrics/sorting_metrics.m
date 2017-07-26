@@ -2,11 +2,11 @@ function sorting_metrics = sorting_metrics(data_dir_or_file, data_type, new_dire
 % Generates fidelity metrics for pre-sorted spikes
 %% Set Up Tasks
     % check input parameters
-    if exist('data_dir_or_file', 'var') == 0 
+    if exist('data_dir_or_file', 'var') == 0
         error('Sorted spike input directory or file is not set.');
     end
     if exist('new_directory', 'var') == 0 || 7~=exist(new_directory, 'dir')
-        error('Output directory not set or is incorrect.');
+        mkdir(new_directory);
     end
     if exist('data_type', 'var') == 0
         error('Data type - kilo or wave - must be set.');
@@ -14,7 +14,7 @@ function sorting_metrics = sorting_metrics(data_dir_or_file, data_type, new_dire
     if exist('sampling_rate', 'var') == 0
         sampling_rate = 24414;
     end
-    %introduction message
+    % introduction message
     fprintf(['Generating sorting quality metrics for the following data: \n' num2str(data_dir_or_file) '\n Data Type: ' data_type '\n \n']);
     % handle slashes
         if(ispc)
@@ -43,7 +43,7 @@ function sorting_metrics = sorting_metrics(data_dir_or_file, data_type, new_dire
             spike_times = g(:,2);
             spike_clusters = g(:,1);
             time_divisor = 1e3; % bec wave_clus outputs in milliseconds, not seconds or sampling number (like kilosort)
-        %kilo
+        % kilo
         elseif data_type == 'kilo'
             data_directory = data_dir_or_file;
             spike_times = readNPY([data_directory slash 'spike_times.npy']);
@@ -58,20 +58,20 @@ function sorting_metrics = sorting_metrics(data_dir_or_file, data_type, new_dire
     % turn off figure generation
         set(0,'DefaultFigureVisible','off');
 
-% %% Bin Data
+%% Bin Data
     bin_data;
-% %% 0 lag pair-wise correlation matrix with a threshold
+%% 0 lag pair-wise correlation matrix with a threshold
     pairwise_corr;
-% %% Cross Correlograms
+%% Cross Correlograms
     cross_corr;
-% %% Refractory period violations vector (ISI)
+%% Refractory period violations vector (ISI)
     isi_violations;
-% %% Autocorrelation; false positive matrix
+%% Autocorrelation; false positive matrix
     auto_corr;
-% %% drift measure: slope of firing rate (over 30s) over session
+%% drift measure: slope of firing rate (over 30s) over session
     drift_fr;
-% %% conclusion
-%     % turn on figure generation
+%% conclusion
+    % turn on figure generation
      set(0,'DefaultFigureVisible','on');
      sorting_metrics = ['Sorting metrics complete. Output saved to: ' new_directory];
 % end
