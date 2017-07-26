@@ -4,7 +4,7 @@ function convertTanks(fpath,save_path)
 %   save_path: folder to store converted binaries
 
 % path to csv file containing list of converted experiment/block pairs
-csv_path = 'D:\SpikeSortingPipeline\Code\SAM_master_completed.csv';
+csv_path = 'D:\SpikeSortingPipeline\Code\TDTconverter\SAM_master_completed.csv';
 % path to xls file containing background info for each experiment/block pair
 xls_path = 'D:\SpikeSortingPipeline\Tanks\SAM_master_list.xlsx';
 
