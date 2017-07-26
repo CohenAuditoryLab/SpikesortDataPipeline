@@ -1,6 +1,6 @@
 @echo off
 call setPaths.bat
-cd %dest%
+cd D:\SpikeSortingPipeline\Sorted
 dir
 set /p fname=Dataset to Visualize: 
 cd %fname%/Kilosort
