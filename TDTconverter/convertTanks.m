@@ -18,17 +18,22 @@ for exp = 15:max(cell2mat(raw(:,1)))
     blocks = setdiff(1:length(indices),completed((completed(:,1) == exp),2));
     indices = indices(blocks); % remove completed blocks
     for i = 1:length(indices) % convert each block
-        index = indices(i);
-        block = blocks(i);
+        tic; % start clock
+        index = indices(i); % index in xls file
         tankfile = char(cell2mat(raw(index,4)));
-        blocknum = cell2mat(raw(index,6));
+        block = cell2mat(raw(index,6));
         forigin = fullfile(fpath,tankfile);
-        fdest = [fullfile(save_path,tankfile) '_b' num2str(blocknum)];
-%         numchannels = cell2mat(raw(index,8));
-        getting_tank_data(forigin, blocknum, 'xpz2', 96, 1, 1, 1, ...
+        fdest = [fullfile(save_path,tankfile) '_b' num2str(block)];
+        
+        disp(['Working on ' tankfile ', block ' num2str(block) '...']);
+        disp('Converting AL data... ');
+        getting_tank_data(forigin, block, 'xpz2', 96, 1, 1, 1, ...
             [fdest '_AL']);
-        getting_tank_data(forigin, blocknum, 'xpz5', 96, 1, 1, 1, ...
+        disp('Converting ML data... ');
+        getting_tank_data(forigin, block, 'xpz5', 96, 1, 1, 1, ...
             [fdest '_ML']);
+        
+        disp(['Conversion took ' num2str(toc/60) ' minutes. Writing to csv file...']);
         dlmwrite(csv_path,[exp block],'-append','delimiter',',','newline', 'pc');
     end
 end
