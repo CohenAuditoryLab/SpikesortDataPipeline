@@ -15,20 +15,21 @@ completed = csvread(csv_path,1);
 % go through all experiments using the correlative from master list
 for exp = 15:max(cell2mat(raw(:,1)))
     indices = find(cell2mat(raw(:,1)) == exp); % get block indices for experiment
-    diff = setdiff(1:length(indices),completed((completed(:,1) == exp),2));
-    indices = indices(diff); % remove completed blocks
-    for block = 1:length(indices) % convert each block
-        index = indices(block);
+    blocks = setdiff(1:length(indices),completed((completed(:,1) == exp),2));
+    indices = indices(blocks); % remove completed blocks
+    for i = 1:length(indices) % convert each block
+        index = indices(i);
+        block = blocks(i);
         tankfile = char(cell2mat(raw(index,4)));
-        forigin = fullfile(fpath,tankfile);
-        fdest = fullfile(save_path,tankfile);
         blocknum = cell2mat(raw(index,6));
+        forigin = fullfile(fpath,tankfile);
+        fdest = [fullfile(save_path,tankfile) '_b' num2str(blocknum)];
 %         numchannels = cell2mat(raw(index,8));
         getting_tank_data(forigin, blocknum, 'xpz2', 96, 1, 1, 1, ...
-            [fdest '_b' num2str(blocknum) '_AL']);
+            [fdest '_AL']);
         getting_tank_data(forigin, blocknum, 'xpz5', 96, 1, 1, 1, ...
-            [fdest '_b' num2str(blocknum) '_ML']);
-        dlmwrite(csv_path,[exp block],'-append','delimiter',',');
+            [fdest '_ML']);
+        dlmwrite(csv_path,[exp block],'-append','delimiter',',','newline', 'pc');
     end
 end
 end
