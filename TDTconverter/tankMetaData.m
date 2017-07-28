@@ -1,12 +1,20 @@
-function tankMetaData(tank_path, block_num)
+function meta = tankMetaData(tank_path, block_num)
+%tankMetaData Returns metadata for the specified tank/block pair.
+%   meta.trials: each row is a trial; the first two columns are the
+%   absolute start and stop time of the trial; the next pair are the
+%   absolute start and stop time of the sound stimulus; the last six
+%   columns are three pairs of start and stop times corresponding to the
+%   three rewards given; if no rewards are given, these values are NaN
+%   
+%   meta.joystick: each row is a trial, columns are in pairs, with the
+%   first column (odd numbered) being the absolute time of sampling and the
+%   second column (even numbered) being the position of the joystick at the
+%   sample time (0 center, 1 left, 2 right); values default to NaN
+
 %% get raw metadata
 raw = tank_trial_info(tank_path, block_num);
 max_joystick_records = 5; % num times to record joystick position
 meta.trial = [];
-
-% hold on;
-% plot(raw.trial_on(1:1e7));
-% plot(raw.joystick(1:1e7));
 
 %% initialize matrix with trial times
 trial_on = raw.trial_on > 1e6;
