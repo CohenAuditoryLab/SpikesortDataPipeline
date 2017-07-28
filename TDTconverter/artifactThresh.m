@@ -63,7 +63,4 @@ function data = artifactThresh(data,validMask,thresh)
             end
         end
     end
-    if length(locs) > 0
-        clc;
-    end
 end
