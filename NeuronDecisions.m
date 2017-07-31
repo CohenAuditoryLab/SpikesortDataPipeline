@@ -13,7 +13,7 @@ if nargin < 1
     fpath = fullfile(fpath,fname);
     disp(fpath);
     slash = strfind(fpath, filesep);
-    new_directory = fpath(1:slash(end));
+    new_directory = fpath(1:slash(end-1));
     metrics = questdlg('Would you like to select a folder for metrics other than the default?',...
         'Metrics Folder','Yes','No','No');
     if strcmp(metrics, 'Yes')
@@ -27,15 +27,15 @@ if nargin < 1
 else
     fpath = varargin{1};
     slash = findstr(fpath, filesep);
-    new_directory = fpath(1:slash(end));
-    if nargin > 2
-        wave_or_kilo = varargin{3};
+    new_directory = fpath(1:slash(end-1));
+    if nargin > 1
+        wave_or_kilo = varargin{2};
     else
         wave_or_kilo = questdlg('Is your data from WaveClus or KiloSort?',...
             'Wave or Kilo?','wave','kilo','wave');
     end
-    if nargin > 3
-        metrics = varargin{4};
+    if nargin > 2
+        metrics = varargin{3};
     else
         metrics = questdlg('Would you like to select a folder for metrics other than the default?',...
             'Metrics Folder','Yes','No','No');
