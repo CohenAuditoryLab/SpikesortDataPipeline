@@ -1,21 +1,19 @@
 function NeuronDecisions(varargin)
 %First argument - full file path to .mat file containing results of metrics
-%Second argument - full path to save directory
-%OPTIONAL Third argument - 'wave' or 'kilo' (lack of this will prompt user
+%OPTIONAL Second argument - 'wave' or 'kilo' (lack of this will prompt user
 %in dialog box)
-%OPTIONAL Fourth argument - path to metrics folder
+%OPTIONAL Third argument - path to metrics folder
 %% Handle variable argument numbers for automated vs. manual options
 
-if nargin < 2
+if nargin < 1
     wave_or_kilo = questdlg('Is your data from WaveClus or KiloSort?',...
         'Wave or Kilo?','wave','kilo','wave');
     disp('Select data file');
     [fname,fpath] = uigetfile();
     fpath = fullfile(fpath,fname);
     disp(fpath);
-    disp('Select save path')
-    new_directory = uigetdir();
-    disp(new_directory);
+    slash = strfind(fpath, filesep);
+    new_directory = fpath(1:slash(end));
     metrics = questdlg('Would you like to select a folder for metrics other than the default?',...
         'Metrics Folder','Yes','No','No');
     if strcmp(metrics, 'Yes')
@@ -28,7 +26,8 @@ if nargin < 2
     disp(metrics);
 else
     fpath = varargin{1};
-    new_directory = varargin{2};
+    slash = findstr(fpath, filesep);
+    new_directory = fpath(1:slash(end));
     if nargin > 2
         wave_or_kilo = varargin{3};
     else
