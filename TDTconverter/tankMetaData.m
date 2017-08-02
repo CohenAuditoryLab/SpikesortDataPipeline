@@ -1,12 +1,26 @@
-function meta = tankMetaData(tank_path, block_num)
+function meta = tankMetaData(tank_path, block_num, task, chan_num, lv_path)
 %tankMetaData Returns metadata for the specified tank/block pair.
+%   INPUTS:
+%   tank_path: path to tank folder
+%   block_num: block number
+%   task: either 'Textures', 'STRF', or 'VOC'
+%   chan_num: number of channels
+%   lv_path: path to LabVIEW data file
+%   
+%   OUTPUTS:
+%   meta.info.task: the string representation of the task
+%   meta.info.chan_num: the number of channels recorded
+%
 %   meta.trials: each row is a trial; the first two columns are the
-%   absolute start and stop time of the trial; the next pair are the
-%   absolute start and stop time of the sound stimulus; the last six
+%   start and stop time of the trial in samples and the last six
 %   columns are three pairs of start and stop times corresponding to the
 %   three rewards given; if no rewards are given, these values are NaN
+%
+%   meta.sound: each row represents a trial for Textures blocks or a single
+%   sound for STRF and VOC blocks, the col 1 is the start time in samples
+%   and col 2 is the stop time in samples
 %   
-%   meta.joystick: each row is a trial, columns are in pairs, with the
+%   meta.joystick: each row is a trial; columns are in pairs, with the
 %   first column (odd numbered) being the absolute time of sampling and the
 %   second column (even numbered) being the position of the joystick at the
 %   sample time (0 center, 1 left, 2 right); values default to NaN
@@ -15,30 +29,63 @@ function meta = tankMetaData(tank_path, block_num)
 raw = tank_trial_info(tank_path, block_num);
 max_joystick_records = 5; % num times to record joystick position
 meta.trial = [];
+meta.sound = [];
+meta.info.task = task;
+meta.info.chan_num = chan_num;
+if nargin > 4
+    lv_file = load(lv_path);
+    field = fieldnames(lv_file);
+    lv_file = lv_file.(field{1});
+end
 
 %% initialize matrix with trial times
-trial_on = raw.trial_on > 1e6;
-if any(trial_on) % there are multiple trials
+if strcmp(task,'Textures')
+    trial_on = raw.trial_on > 3e6;
     trial_toggle = trial_on(1); % toggle on when trial is on
     temp_samp = 1;
     for t = 1:length(trial_on)
         trial_val = trial_on(t);
-        if trial_toggle == 1 && trial_val == 0
+        if trial_toggle && ~trial_val
             trial_toggle = 0;
             meta.trial = [meta.trial; [temp_samp t NaN(1,8)]]; % initialize
-        elseif trial_toggle == 0 && trial_val == 1
+        elseif ~trial_toggle && trial_val
             trial_toggle = 1;
             temp_samp = t-1;
         end
     end
 else % there is only one trial (single trials have a different threshold)
-    meta.trial = [0 find(raw.trial_on < 3e5,1,'first') NaN(1,8)]; % initialize
+    meta.trial = [1 find(raw.trial_on < 3e5,1,'first') NaN(1,8)]; % initialize
 end
 
 %% get sound stimulus times
+if strcmp(task,'Textures')
+    meta.sound = cell2mat({lv_file.StimulusOn}');
+    meta.sound(meta.sound(:,2) == -1,2) = NaN;
+    meta.sound = round(meta.sound * 24.14) + [meta.trial(:,1) meta.trial(:,1)];
+else % 'STRF' or 'VOC'
+    sound = (raw.triggers > 2e6);
+    sound_toggle = 0;
+    for t = 1:length(raw.triggers)
+        sound_val = sound(t);
+        if ~sound_toggle && sound_val
+            if ~isempty(meta.sound) 
+                meta.sound(end,end) = t;
+            end
+            meta.sound = [meta.sound; t NaN];
+            sound_toggle = 1;
+        elseif sound_toggle && ~sound_val
+            sound_toggle = 0;
+        end
+    end
+    meta.sound = meta.sound(1:(end-1),:);
+    if strcmp(task,'STRF') && length(meta.sound) > 2
+        meta.sound = [meta.sound(1,:); meta.sound(3:end,:)];
+        meta.sound(1,2) = meta.sound(2,1);
+    end
+end
 
 %% get joystick times and directions
-if max_joystick_records ~= 0 % do not parse for joystick records if 0
+if max_joystick_records ~= 0 && strcmp(task,'Textures')
     meta.joystick = NaN(size(meta.trial,1), 2*max_joystick_records); % initialize
     for trial = 1:size(meta.trial,1)
         t_init = meta.trial(trial,1); % used for time conversion
@@ -67,7 +114,7 @@ if max_joystick_records ~= 0 % do not parse for joystick records if 0
         end
         
     end
-else
+else % no joystick movements to record, or not required by task
     meta.joystick = [];
 end
 
@@ -82,19 +129,19 @@ for trial = 1:size(meta.trial,1)
         r_num = 1; % incremented based on reward number of 3
         for t_rel = 1:length(snip)
             trial_val = snip(t_rel);
-            if reward_toggle == 1 && trial_val == 0
+            if reward_toggle && ~trial_val
                 reward_toggle = 0; % toggle off when reward is not being given
                 
                 % reward start and end, convert to absolute time
-                meta.trial(trial,2*r_num+3) = temp_samp + t_init - 1; 
-                meta.trial(trial,2*r_num+4) = t_rel + t_init - 1;
+                meta.trial(trial,2*r_num+1) = temp_samp + t_init - 1; 
+                meta.trial(trial,2*r_num+2) = t_rel + t_init - 1;
                 
                 r_num = r_num + 1;
                 if r_num == 4
                     % do not record any more rewards for this trial
                     break;
                 end
-            elseif reward_toggle == 0 && trial_val == 1
+            elseif ~reward_toggle && trial_val
                 reward_toggle = 1; % toggle on when reward is being given
                 temp_samp = t_rel - 1;
             end
