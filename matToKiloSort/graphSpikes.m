@@ -54,7 +54,7 @@ if display % user selects cluster to graph
         'Callback',@(src,event) createClusterGrid(figClust,out,param,clusters(event.Source.Value)));
 else % graph and save all clusters
     tic;
-    parfor i = 1:size(clusters,1)
+    for i = 1:size(clusters,1)
         clustNum = clusters(i);
         fig = figure();
         set(gcf,'pos',[400 200 1000 600]);
