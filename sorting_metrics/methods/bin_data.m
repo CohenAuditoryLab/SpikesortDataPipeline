@@ -12,6 +12,8 @@
         num_clusters = numel(cluster_names);
         parfor_progress(num_clusters);
         cluster_count = zeros(num_clusters,1);
+        spikes_by_bin = zeros(num_clusters, num_bins);
+        tic;
         parfor i = 1:num_clusters % 1 to num clusters
             % get spike times of the cell
             cluster_spikes = double(spike_times(find(spike_clusters==cluster_names(i))))./time_divisor; % now in seconds
@@ -32,5 +34,6 @@
         num_active_clusters = numel(active_clusters);
         parfor_progress(0);
         % save binned spikes
-        save([new_directory slash 'binned_spikes_by_cluster.mat'], 'spikes_by_bin');
-        disp('Saved binned spikes by cluster.');
+        save([new_directory slash 'binned_spikes_by_cluster.mat'], 'spikes_by_bin', '-v7.3');
+        wtime = toc;
+        disp(['Saved binned spikes by cluster. Binning took ' datestr(wtime/(60*60*24), 'HH:MM:SS.FFF') ' (HH:MM:SS.FFF)']);
