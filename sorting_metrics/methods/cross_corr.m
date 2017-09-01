@@ -9,7 +9,7 @@
     parfor_progress(num_clusters_for_corr);
     avg_diff_array = zeros(num_clusters_for_corr,num_clusters_for_corr);
     half_matrix = triu(ones(num_clusters_for_corr,num_clusters_for_corr));
-    for k=1:num_clusters_for_corr
+    parfor k=1:num_clusters_for_corr
         cell1_data = spikes_by_bin(k, :);
         for j=1:num_clusters
             if k==j
@@ -38,7 +38,8 @@
             % make crosscorr directory 
             xcorr_directory = [new_directory slash 'cross_correlograms'];
             if 7~=exist(xcorr_directory, 'dir') mkdir(xcorr_directory); end
-            f = figure;
+            f = figure('Position',[-1000,-1000,800,500]);
+            %f = figure;
             plot(lag, x_coeff);
             title(['Cross Correlelogram' char(10) '(Cell ' num2str(active_clusters(k)) ' vs. Cell ' num2str(active_clusters(j)) ')']);
             a3 = gca;

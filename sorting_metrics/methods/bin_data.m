@@ -5,6 +5,7 @@
         bin_size = 1e-3; % in seconds
         max_time = double(max(spike_times))/time_divisor;
         num_bins = round(max_time/bin_size) + 1; % add a bin to be safe
+        bins = 1:num_bins;
         %loop
         spikes_by_bin = [];
         disp(['Binning cluster spike times by ' num2str(bin_size*1000) 'ms bins.']);
@@ -22,12 +23,14 @@
                 continue;
             end
             % collect by bin
+            spikes_by_bin(i,:) = histc((cluster_spikes),bins*bin_size);
+            
+%             for j=1:num_bins
+%                 bin = j*bin_size;
+%                 bin_prev = (j-1)*bin_size;
+%                 spikes_by_bin(i,j) = numel(cluster_spikes(cluster_spikes <= bin & cluster_spikes > bin_prev));
+%             end    
             parfor_progress;
-            for j=1:num_bins
-                bin = j*bin_size;
-                bin_prev = (j-1)*bin_size;
-                spikes_by_bin(i,j) = numel(cluster_spikes(cluster_spikes <= bin & cluster_spikes > bin_prev));
-            end    
         end
         spikes_by_bin = spikes_by_bin(find(cluster_count>0), :);
         active_clusters = cluster_names(find(cluster_count>0));
@@ -37,3 +40,4 @@
         save([new_directory slash 'binned_spikes_by_cluster.mat'], 'spikes_by_bin', '-v7.3');
         wtime = toc;
         disp(['Saved binned spikes by cluster. Binning took ' datestr(wtime/(60*60*24), 'HH:MM:SS.FFF') ' (HH:MM:SS.FFF)']);
+        return;
