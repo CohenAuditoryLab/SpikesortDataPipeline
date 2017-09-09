@@ -1,4 +1,4 @@
-function meta = tankMetaData(tank_path, block_num, task, chan_num, lv_path)
+function [meta,lv_file] = tankMetaData(tank_path, block_num, task, chan_num, lv_path)
 %tankMetaData Returns metadata for the specified tank/block pair.
 %   INPUTS:
 %   tank_path: path to tank folder
@@ -17,8 +17,9 @@ function meta = tankMetaData(tank_path, block_num, task, chan_num, lv_path)
 %   three rewards given; if no rewards are given, these values are NaN
 %
 %   meta.sound: each row represents a trial for Textures blocks or a single
-%   sound for STRF and VOC blocks, the col 1 is the start time in samples
-%   and col 2 is the stop time in samples
+%   sound for STRF and VOC blocks, the col 1 is the start time in samples,
+%   col 2 is the stop time in samples, col3 is the start of BAD token in
+%   samples
 %   
 %   meta.joystick: each row is a trial; columns are in pairs, with the
 %   first column (odd numbered) being the absolute time of sampling and the
@@ -40,7 +41,7 @@ end
 
 %% initialize matrix with trial times
 if strcmp(task,'Textures')
-    trial_on = raw.trial_on > 3e6;
+    trial_on = raw.trial_on > (0.9*max(raw.trial_on));
     trial_toggle = trial_on(1); % toggle on when trial is on
     temp_samp = 1;
     for t = 1:length(trial_on)
@@ -59,9 +60,14 @@ end
 
 %% get sound stimulus times
 if strcmp(task,'Textures')
-    meta.sound = cell2mat({lv_file.StimulusOn}');
+    meta.sound = cell2mat([{lv_file.StimulusOn}' {lv_file.TimeStamp}']);
     meta.sound(meta.sound(:,2) == -1,2) = NaN;
-    meta.sound = round(meta.sound * 24.14) + [meta.trial(:,1) meta.trial(:,1)];
+    temp=meta.sound;
+    temp(:,2)=meta.sound(:,3);
+    temp(:,3)=meta.sound(:,2);
+    meta.sound=temp;clear temp
+    meta.sound = round(meta.sound * 24.14) + [meta.trial(:,1) meta.trial(:,1) meta.trial(:,1)];
+    meta.param = {lv_file.CurrentParam};
 else % 'STRF' or 'VOC'
     sound = (raw.triggers > 2e6);
     sound_toggle = 0;

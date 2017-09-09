@@ -170,8 +170,10 @@ set(tritab, 'units', 'normalized', 'position', [0 0 1 1], ...
         for i = 1:length(data)
             g = g(g(:,1) ~= data(i),:);
         end
+        [a,b,~] = fileparts(strip(new_directory,'right',filesep));
+        [~,c,~] = fileparts(a);
         
-        save(fullfile(new_directory,'final_clusters'), 'g')
+        save(fullfile(new_directory,[c '_' b  '_finalclusters']), 'g')
         close all;
     end
 
