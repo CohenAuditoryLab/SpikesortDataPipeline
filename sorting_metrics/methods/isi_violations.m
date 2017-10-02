@@ -70,6 +70,7 @@
                xticklabels(active_clusters(high_violators));
                ylabel('ISI Violations/Spikes');
                title('ISI Refractory Violations per Spike Rate (Greater than 5%)');
+               set(gca,'XTickLabelRotation',90)
                saveas(f, [new_directory slash 'isi__high_violators.png']); close all;
             else
                disp('No cluster had a violation rate greater than 5%.');

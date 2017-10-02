@@ -1,4 +1,4 @@
-function sorting_metrics = sorting_metrics(data_dir_or_file, data_type, new_directory, sampling_rate)
+function sorting_metrics = sorting_metrics(data_dir_or_file, data_type, new_directory, sampling_rate, just_isi)
 % Generates fidelity metrics for pre-sorted spikes
 %% Set Up Tasks
     % check input parameters
@@ -60,12 +60,13 @@ function sorting_metrics = sorting_metrics(data_dir_or_file, data_type, new_dire
 
 %% Bin Data
     bin_data;
-%% 0 lag pair-wise correlation matrix with a threshold
-    pairwise_corr;
-%% Cross Correlograms
-    cross_corr;
 %% Refractory period violations vector (ISI)
     isi_violations;
+    if exist('just_isi', 'var') == 1 && just_isi == 1 return, end
+%% Cross Correlograms
+    cross_corr;
+%% 0 lag pair-wise correlation matrix with a threshold
+    pairwise_corr;  
 %% Autocorrelation; false positive matrix
     auto_corr;
 %% drift measure: slope of firing rate (over 30s) over session
