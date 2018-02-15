@@ -75,4 +75,12 @@
             else
                disp('No cluster had a violation rate greater than 5%.');
             end
+            % save violators
+            violators = struct;
+            violators.greaterThan_05 = active_clusters(find(violations_per_event_rate > 0.05));
+            violators.greaterThan_10 = active_clusters(find(violations_per_event_rate > 0.10));
+            violators.greaterThan_20 = active_clusters(find(violations_per_event_rate > 0.20));
+            violators.greaterThan_30 = active_clusters(find(violations_per_event_rate > 0.30));
+            violators.greaterThan_50 = active_clusters(find(violations_per_event_rate > 0.50));
+            save([new_directory slash 'violators.mat'],'violators');
             disp('Saved ISI violations per spike rate.');

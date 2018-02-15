@@ -11,7 +11,7 @@ function sorting_metrics = sorting_metrics(data_dir_or_file, data_type, new_dire
     if exist('data_type', 'var') == 0
         error('Data type - kilo or wave - must be set.');
     end
-    if exist('sampling_rate', 'var') == 0
+    if exist('sampling_rate', 'var') == 0 || sampling_rate == 0
         sampling_rate = 24414;
     end
     % introduction message
