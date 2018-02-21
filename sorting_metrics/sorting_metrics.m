@@ -29,7 +29,7 @@ function sorting_metrics = sorting_metrics(data_dir_or_file, data_type, new_dire
     % Load Data
         disp('Loading data');
         % wave
-        if data_type == 'wave'
+        if strcmpi(data_type,'wave')
             data = load(data_dir_or_file);
             data_directory = fileparts(data_dir_or_file);
             %spike_times = data.cluster_class(data.cluster_class(:,1) ~= 0,2); % get times of active clusters %readNPY([data_directory slash 'spike_times.npy']);
@@ -44,11 +44,15 @@ function sorting_metrics = sorting_metrics(data_dir_or_file, data_type, new_dire
             spike_clusters = g(:,1);
             time_divisor = 1e3; % bec wave_clus outputs in milliseconds, not seconds or sampling number (like kilosort)
         % kilo
-        elseif data_type == 'kilo'
+        elseif strcmpi(data_type,'kilo')
             data_directory = data_dir_or_file;
             spike_times = readNPY([data_directory slash 'spike_times.npy']);
             spike_clusters = readNPY([data_directory slash 'spike_clusters.npy']);
             time_divisor = double(sampling_rate);
+        % ic data
+        elseif strcmpi(data_type,'ic')
+            [spike_times, spike_clusters] = extractSpikesFromICdata(data_dir_or_file);
+            time_divisor = 1;
         end
         disp('Data loaded.');
         % save standard cluster_spike_output
