@@ -23,7 +23,7 @@ function outputCollector = runMetricsOnMultipleOutputs(sampling_rate, just_isi)
     for i=1:numel(files)
     % loop through the directores
         output = struct;
-        [~,output.fileName,~] = fileparts(files{1});
+        [~,output.fileName,~] = fileparts(files{i});
         % run sorting metrics
         sorting_metrics(files{i}, data_type, [files{i} sslash 'Metrics'], sampling_rate,just_isi);
         % count cluster # 
