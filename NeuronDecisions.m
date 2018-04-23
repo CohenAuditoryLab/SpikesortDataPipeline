@@ -195,7 +195,7 @@ set(tritab, 'units', 'normalized', 'position', [0 0 1 1], ...
                 elseif strcmp(wave_or_kilo, 'kilo')
                     imfile = ['cluster_' c '.png'];
                     %THIS PATH MIGHT NEED TO BE MODIFIED.
-                    imsorted = imread([new_directory filesep 'KiloSort' filesep imfile]);
+                    imsorted = imread([new_directory filesep 'KiloSort_Images' filesep imfile]);
                 end
                 wavax = axes('Visible', 'Off', 'Parent', wavtab, 'Units', 'Normalized', 'Position', [0 0 1 1]);
                 set(wavtab, 'Title', ['Waveform, Neuron ' c]);
@@ -207,6 +207,7 @@ set(tritab, 'units', 'normalized', 'position', [0 0 1 1], ...
             end
             
             set(isitab, 'Title', ['ISI Distribution, Neuron ' c]);
+            disp([metrics filesep 'isi_distributions' filesep 'isi__distribution_' c '.png']);
             imisidis = imread([metrics filesep 'isi_distributions' filesep 'isi__distribution_' c '.png']);
             isiax = axes('Visible', 'Off', 'Parent', isitab, 'Units',...
                 'Normalized', 'Position', [0 0 1 1]);

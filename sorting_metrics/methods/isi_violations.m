@@ -70,8 +70,22 @@
                xticklabels(active_clusters(high_violators));
                ylabel('ISI Violations/Spikes');
                title('ISI Refractory Violations per Spike Rate (Greater than 5%)');
+               set(gca,'XTickLabelRotation',90)
                saveas(f, [new_directory slash 'isi__high_violators.png']); close all;
             else
                disp('No cluster had a violation rate greater than 5%.');
             end
+            % save violators
+            violators = struct;
+            violators.greaterThan_05 = active_clusters(find(violations_per_event_rate > 0.05));
+            violators.greaterThan_10 = active_clusters(find(violations_per_event_rate > 0.10));
+            violators.greaterThan_20 = active_clusters(find(violations_per_event_rate > 0.20));
+            violators.greaterThan_30 = active_clusters(find(violations_per_event_rate > 0.30));
+            violators.greaterThan_50 = active_clusters(find(violations_per_event_rate > 0.50));
+            save([new_directory slash 'violators.mat'],'violators');
+            % save all ISI
+            violations_isi = zeros([num_active_clusters 2]);
+            violations_isi(:,1) = active_clusters;
+            violations_isi(:,2) = reshape(violations_per_event_rate, [num_active_clusters 1]);
+            save([new_directory slash 'isi_violations.mat'],'violations_isi');
             disp('Saved ISI violations per spike rate.');
