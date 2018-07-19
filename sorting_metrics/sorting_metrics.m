@@ -53,6 +53,10 @@ function sorting_metrics = sorting_metrics(data_dir_or_file, data_type, new_dire
         elseif strcmpi(data_type,'ic')
             [spike_times, spike_clusters] = extractSpikesFromICdata(data_dir_or_file);
             time_divisor = 1;
+        % ic data
+        elseif strcmpi(data_type,'sharath')
+            [spike_times, spike_clusters] = extractSpikesFromSharathData(data_dir_or_file);
+            time_divisor = 1e3;
         end
         disp('Data loaded.');
         % save standard cluster_spike_output

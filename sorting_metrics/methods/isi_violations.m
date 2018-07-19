@@ -22,13 +22,14 @@
                     end
                 % set violations by looping through spikes
                     violation_counter = 0;
-                    for k=2:clusters(i)
-                        % add to violation counter if the second spike is
-                        % less than refractory period limit
-                        if cluster_spikes(k) - cluster_spikes(k-1) < refractory_limit
-                            violation_counter = violation_counter + 1;
-                        end
-                    end
+%                     for k=2:clusters(i)
+%                         % add to violation counter if the second spike is
+%                         % less than refractory period limit
+%                         if cluster_spikes(k) - cluster_spikes(k-1) < refractory_limit
+%                             violation_counter = violation_counter + 1;
+%                         end
+%                     end
+                    violation_counter = violation_counter + sum(diff(cluster_spikes) < refractory_limit);
                     violations(i) = violation_counter;
                 % output ISI distribution
                 g = figure;
