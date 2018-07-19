@@ -38,26 +38,32 @@ if nargin > 4
     field = fieldnames(lv_file);
     lv_file = lv_file.(field{1});
 end
+%trial_on = raw.trial_on > (0.9*max(raw.trial_on));
 
 %% initialize matrix with trial times
 if strcmp(task,'Textures')
-    trial_on = raw.trial_on > (0.9*max(raw.trial_on));
+    %trial_on = raw.trial_on > (0.9*max(raw.trial_on));
+    trial_on = raw.trial_on > 3.5;
     trial_toggle = trial_on(1); % toggle on when trial is on
     temp_samp = 1;
     for t = 1:length(trial_on)
         trial_val = trial_on(t);
-        if trial_toggle && ~trial_val
+        if trial_toggle && ~trial_val % if a trial ended
             trial_toggle = 0;
-            meta.trial = [meta.trial; [temp_samp t NaN(1,8)]]; % initialize
-        elseif ~trial_toggle && trial_val
-            trial_toggle = 1;
-            temp_samp = t-1;
+            meta.trial = [meta.trial; [temp_samp t NaN(1,8)]]; % initialize 
+            
+        elseif ~trial_toggle && trial_val && trial_on(t+100) %if trial started
+            %disp()
+            %if (t - meta.trial(end,2) > 94146) % if the time between trials is greater than 3.9 seconds * sampling rate (24140)
+                trial_toggle = 1;
+                temp_samp = t-1;
+            %end
         end
     end
 else % there is only one trial (single trials have a different threshold)
     meta.trial = [1 find(raw.trial_on < 3e5,1,'first') NaN(1,8)]; % initialize
 end
-
+a = 1;
 if length(meta.trial)<length(lv_file)
     lv_file=lv_file(end-length(meta.trial)+1:end);
 end

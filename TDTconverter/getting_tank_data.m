@@ -53,7 +53,7 @@ elseif number_channels==96 && strcmp(preamp_var,'xpz2') % 96 channels in xpz2 st
         [data]=SEV2mat([tank_folder '\' block_str],'CHANNEL',counter,'EVENTNAME','xpz2');
         spike_waves(n,:)=double(data.(preamp_var).data);
         fs=data.(preamp_var).fs;
-        counter=counter+1;
+         counter=counter+1;
     end
    
 elseif number_channels<64

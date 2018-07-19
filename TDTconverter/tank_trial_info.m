@@ -13,7 +13,8 @@ function meta=tank_trial_info(tank_path,block_number)
 %           sound_stimuli : sound being played to the speakers
 %           triggers      : If Dynamic Moving Ripple or vocalizations are being played this waveform will have triggers
 
-full_path=fullfile(tank_path,['Block-' num2str(block_number)]);
+%full_path=fullfile(tank_path,['SAM-180102_bLOCK-' num2str(block_number)]);
+full_path=fullfile(tank_path);
 temp=SEV2mat(full_path,'Channel',131,'EVENTNAME','xpz2');
 meta.reward=temp.xpz2.data; clear temp;
 temp=SEV2mat(full_path,'Channel',132,'EVENTNAME','xpz2');

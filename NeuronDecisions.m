@@ -58,7 +58,7 @@ pos = f.Position;
 
 tabgp = uitabgroup(f);
 tabmain = uitab(tabgp, 'Title', 'Select Neurons', 'BackgroundColor', 'White');
-tabgp2 = uitabgroup(tabmain, 'Units', 'Pixels', 'Position', [400 20 900 700]);
+tabgp2 = uitabgroup(tabmain, 'Units', 'Pixels', 'Position', [400 0 900 700]);
 tablb = uitab(tabgp2, 'Title', 'Metrics');
 wavtab = uitab(tabgp2, 'Title', 'Waveform');
 isitab = uitab(tabgp2, 'Title', 'ISI');
