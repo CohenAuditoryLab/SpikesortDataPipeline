@@ -30,18 +30,46 @@ function sorting_metrics = sorting_metrics(data_dir_or_file, data_type, new_dire
         disp('Loading data');
         % wave
         if strcmpi(data_type,'wave')
-            data = load(data_dir_or_file);
-            data_directory = fileparts(data_dir_or_file);
+            %data_directory = fileparts(data_dir_or_file);
             %spike_times = data.cluster_class(data.cluster_class(:,1) ~= 0,2); % get times of active clusters %readNPY([data_directory slash 'spike_times.npy']);
             %spike_clusters = data.cluster_class(data.cluster_class(:,1) ~= 0,1); % get times of active clusters %readNPY([data_directory slash 'spike_clusters.npy']); 
             
             % Combine clusters from different wave_clus outputs
-            g = [];
-            for i=1:numel(data.allClusters)
-                g = [g; data.allClusters{i}(data.allClusters{i}(:,1)~=0,1)./10.+i, data.allClusters{i}(data.allClusters{i}(:,1)~=0,2)];
+            % determine if it's a file or directory
+            if isdir(data_dir_or_file)
+                % load data
+                files = dir([data_dir_or_file filesep 'times*']);
+                % initialize spike_times & spike_clusters
+                spike_times = zeros([0 1]);
+                spike_clusters = zeros([0 1]);
+                for i=1:numel(files)
+                    % extract cluster #
+                    file = files(i);
+                    underscore_indices = strfind(file.name,'_ch'); 
+                    mat_index = strfind(file.name,'.mat'); 
+                    clusterNum = str2double(file.name(underscore_indices(end)+3:mat_index(end)-1));
+                    % load file
+                    load([data_dir_or_file filesep file.name], 'cluster_class');
+                    spikes = cluster_class(cluster_class(:,1) ~= 0,:);
+                    spikes(:,1) = spikes(:,1)+ clusterNum*100;
+                    spike_times = vertcat(spike_times, spikes(:,2));
+                    spike_clusters = vertcat(spike_clusters, spikes(:,1));
+                end
+            else
+                data = load(data_dir_or_file);
+                g = [];
+                if isfield(data, 'allClusters')
+
+                    for i=1:numel(data.allClusters)
+                        g = [g; data.allClusters{i}(data.allClusters{i}(:,1)~=0,1)./10.+i, data.allClusters{i}(data.allClusters{i}(:,1)~=0,2)];
+                    end
+                    spike_times = g(:,2);
+                    spike_clusters = g(:,1);
+                else
+                    spike_times = data.cluster_class(:,2);
+                    spike_clusters = data.cluster_class(:,1);
+                end
             end
-            spike_times = g(:,2);
-            spike_clusters = g(:,1);
             time_divisor = 1e3; % bec wave_clus outputs in milliseconds, not seconds or sampling number (like kilosort)
         % kilo
         elseif strcmpi(data_type,'kilo')
