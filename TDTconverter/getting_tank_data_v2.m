@@ -1,4 +1,4 @@
-function [spike_waves]=getting_tank_data(tank_folder,block,preamp_var,number_channels,notch_filter,band_filter,artifact,fpath)
+function [spike_waves]=getting_tank_data_v2(tank_folder,block,preamp_var,number_channels,notch_filter,band_filter,artifact,fpath)
 tic;
 if nargin<4
    notch_filter=64; 

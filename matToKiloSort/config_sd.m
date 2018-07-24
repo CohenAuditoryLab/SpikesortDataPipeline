@@ -1,3 +1,4 @@
+
 %config  Build the structure of options (ops) for a KiloSort simulation.
 
 ops.GPU         = 1; % whether to run this code on an Nvidia GPU
@@ -12,54 +13,55 @@ ops.fproc    = fullfile(fpath, 'temp_wh.dat'); % residual of RAM of preprocessed
 ops.root     = fpath; % 'openEphys' only: where raw files are
 
 %% options for channels and clustering
-ops.fs       = 24414.0625;        % sampling rate
+ops.fs       = 24414;        % sampling rate
 ops.NchanTOT = num_channels; % total number of channels
 ops.Nchan    = ops.NchanTOT; % num active channels
-ops.Nfilt    = 4*ops.Nchan;  % num clusters to use (2-4x Nchan, multiple of 32)
+ops.Nfilt    = 2*ops.Nchan;  % num clusters to use (2-4x Nchan, multiple of 32)
 ops.nNeighPC = 12;           % (Phy): num channels to mask the PCs
 ops.nNeigh   = 16;           % (Phy): num neighbor templates to retain projections of
 
 % options for channel whitening
 ops.whitening = 'full'; % type of whitening
 ops.nSkipCov = 1; % compute whitening matrix from every N-th batch
-ops.whiteningRange = 1; % how many channels to whiten together
+ops.whiteningRange = inf; % how many channels to whiten together
 
 % define the channel map as a filename made using createChannelMapFile.m
 ops.chanMap = [];
 
 % fraction of "noise" templates allowed to span all channel groups
 % (see createChannelMapFile for more info).
-ops.criterionNoiseChannels = 0.1;
+ops.criterionNoiseChannels = 0.2;
 
 %% options for controlling model and optimization
 ops.Nrank       = 3;     % matrix rank of spike template model
 ops.nfullpasses = 6;     % num complete passes through data during optimization
-ops.maxFR       = 20000; % maximum number of spikes to extract per batch
-ops.fslow       = 2e3;   %3e3
+ops.maxFR       = 50000; % maximum number of spikes to extract per batch
+ops.fslow       = 3e3;
 ops.fshigh      = 300;   % frequency for high pass filtering
-ops.ntbuff      = 41;    % samples of symmetrical buffer for whitening and spike detection 64
-ops.scaleproc   = 1;   % int16 scaling of whitened data 200
+ops.ntbuff      = 64;    % samples of symmetrical buffer for whitening and spike detection
+ops.scaleproc   = 200;   % int16 scaling of whitened data
 ops.NT          = 32*2048+ ops.ntbuff; % batch size (try decreasing if out of memory)
                                        % for GPU should be multiple of 32 + ntbuff
 
 %% options to improve/deteriorate results
 % when multiple values are provided for an option, the first two are beginning
 % and ending anneal values, the third is the value used in the final pass.
-ops.Th  = [6 12 12]; % threshold for detecting spikes on template-filtered data
-ops.lam = [10 30 30]; % large means amplitudes are forced around the mean
+ops.Th  = [4 10 10]; % threshold for detecting spikes on template-filtered data
+ops.lam = [5 20 20]; % large means amplitudes are forced around the mean
 ops.nannealpasses    = 4;           % should be less than nfullpasses
-ops.momentum         = 1./[20 1000]; % start with high momentum and anneal
+ops.momentum         = 1./[20 400]; % start with high momentum and anneal
 ops.shuffle_clusters = 1;           % allow merges and splits during optimization
 ops.mergeT           = .1;          % upper threshold for merging
 ops.splitT           = .1;          % lower threshold for splitting
 		
 %% options for initializing spikes from data
 ops.initialize      = 'no'; % 'fromData' or 'no'
-ops.spkTh           = -6;%-4.5;       % spike threshold in standard deviations
+%ops.spkTh           = -3.5;       % spike threshold in standard deviations
+ops.spkTh           = sdval;       % spike threshold in standard deviations
 ops.loc_range       = [3  1];     % ranges to detect peaks; plus/minus in time and channel
 ops.long_range      = [30  6];    % ranges to detect isolated peaks
-ops.maskMaxChannels = 5;          % how many channels to mask up/down
-ops.crit            = 0.65;        % upper criterion for discarding spike repeates
+ops.maskMaxChannels = 8;          % how many channels to mask up/down changed to 8
+ops.crit            = 0.60;        % upper criterion for discarding spike repeates changed to 60
 ops.nFiltMax        = 10000;      % maximum "unique" spikes to consider
 
 % load predefined principal components (visualization only (Phy): used for features)

@@ -179,7 +179,7 @@ if make_times
     
 	log_name = 'spc_log.txt';
 	f = fopen(log_name, 'w');
-	for fnum = 1:length(filenames)
+for fnum = 1:length(filenames)
         filename = filenames{fnum};
         log_name = [filename 'spc_log.txt'];
         if exist(log_name, 'file')
@@ -189,7 +189,7 @@ if make_times
 			fclose(fi);
 			delete(log_name);
 		end
-    end
+end
 	fclose(f);
 
 	tocaux = toc;
@@ -362,16 +362,16 @@ if make_plots
             xlim([1 size(spikes,2)]);
             hold on;
 	    
-	    key = 'channel';
+	    key = 'ch';
 	    index = strfind(filename, key); %gives beginning of word channel
 	    d = strfind(filename, '.'); %gives position of .mat 
 	    
             plot(spikes(class(1:max_spikes),:)','color',color(mod(i-1,maxc)+1,:)); 
             plot(mean(spikes(class,:),1),'k','linewidth',2)
             xlim([1 size(spikes,2)]); 
-            title(['Channel' filename(index+6:d) 'Cluster ' num2str(i) ': # ' num2str(length(class)) ' (' num2str(nnz(classes(:)==i & ~forced(:))) ')'],'Fontweight','bold')
+            title(['Channel ' filename(3:end) ' Cluster ' num2str(i) ': # ' num2str(length(class)) ' (' num2str(nnz(classes(:)==i & ~forced(:))) ')'],'Fontweight','bold')
             ylimit = [ylimit;ylim];
-            print(indiv_fig,'-dpng',['cluster_' filename(index+6:d) '_' num2str(i) '.png'],resolution);
+            print(indiv_fig,'-dpng',['channel' filename(3:end) '_cluster' num2str(i) '.png'],resolution);
             
         end
 

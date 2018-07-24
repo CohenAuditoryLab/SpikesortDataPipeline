@@ -4,6 +4,7 @@ function matToKiloSort_v3(fbinary,fpath,num_channels)
 %   and save all data in fpath, including waveform graphs.
 %   num_channels is needed to specify the exact number of channels in the
 %   binary file.
+%   splits each file into little snippets 
 
 %% initialize variables
 addpath(genpath('C:\work\KiloSort-master')) % path to kilosort folder
@@ -67,7 +68,8 @@ save(fullfile(pathToUnmerged,  'rez_MLunmerged.mat'), 'rez_nomerge', '-v7.3'); %
 rez_merged = merge_posthoc2(rez_nomerge); % use KiloSort's automerge functionality
 
 %% save files
-rezToPhy(rez_merged, fpath); % save python results file for Phy
+rezToPhy(rez_nomerge, pathToUnmerged); % save unmerged python results file for Phy
+rezToPhy(rez_merged, fpath);           % save merged python results file for Phy
 save(fullfile(fpath,  'rez_ML.mat'), 'rez_merged', '-v7.3'); % save matlab results file
 save(fullfile(fpath,'channels_files_ml'),'channels_files_ml');
 delete(ops.fproc); % remove temporary file
