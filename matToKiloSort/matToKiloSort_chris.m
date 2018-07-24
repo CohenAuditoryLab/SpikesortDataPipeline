@@ -1,4 +1,4 @@
-function matToKiloSort(fbinary,fpath,num_channels)
+function matToKiloSort(fbinary,fpath)
 %matToKiloSort  Run a KiloSort simulation using binary-converted TDT data.
 %   matToKiloSort(fbinary,fpath,num_channels) will run KiloSort on fbinary
 %   and save all data in fpath, including waveform graphs.
@@ -9,7 +9,7 @@ function matToKiloSort(fbinary,fpath,num_channels)
 
 addpath(genpath('C:\work\KiloSort-master')) % path to kilosort folder
 addpath(genpath('C:\work\phy-master')) % path to npy-matlab scripts
-pathToYourConfigFile = 'D:\SpikeSortingPipeline\Code\matToKiloSort';
+pathToYourConfigFile = 'C:\work\chris_raw_data';
 pathToUnmerged = [fpath,'\NoMerge'];
 
 % specify location to store data files for this simulation
@@ -17,14 +17,12 @@ if ~exist(fpath, 'dir'); mkdir(fpath); end
 if ~exist(pathToUnmerged, 'dir'); mkdir(pathToUnmerged); end
 
 % run the config file to build the structure of options (ops)
-%run(fullfile(pathToYourConfigFile, 'config_one.m'));
- run(fullfile(pathToYourConfigFile, 'config.m'));
-%run(fullfile(pathToYourConfigFile, 'config_single.m'));
-if mod(ops.Nfilt,32) ~= 0, ops.Nfilt = ops.Nfilt + 32 - mod(ops.Nfilt); end
-% 
- if ops.GPU, gpuDevice(1); end % initialize GPU
+run(fullfile(pathToYourConfigFile, 'config_CA061.m'))
+%if mod(ops.Nfilt,32) ~= 0, ops.Nfilt = ops.Nfilt + 32 - mod(ops.Nfilt); end
 
-createChannelMapFile(fpath,num_channels); % create and save file in specified location
+if ops.GPU, gpuDevice(1); end % initialize GPU
+
+%createChannelMapFile(fpath,num_channels) % create and save file in specified location
 
 %% process formatted data with KiloSort
 [rez, DATA, uproj] = preprocessData(ops); % preprocess data and extract spikes

@@ -19,18 +19,20 @@ if nargin < 1
 else
     display = 0;
     if nargin < 2
-        load(fullfile(fpath,'rez.mat'),'rez');
+        load(fullfile(fpath,'rez.mat'),'rez_merged');
     end
     cd(fpath);
 end
 
+% rez = rez_merged;
 % time window to sample and display
 param.sample_win = -35:35;
 param.view_win = -25:25;
 
 % extract spikes
-out = getRawWaveforms(rez,param.sample_win);
+out = getRawWaveforms1(rez, param.sample_win);
 clusters = unique(out.spikeClusters);
+clusters=clusters(2:end); % not using cluster 0
 
 % convert x-axis from samples to ms
 param.samp_fac = 1000 / 24424;
@@ -46,7 +48,7 @@ for i = 1:size(out.spikeWaves,3)
 end
 
 %% graphing controls
-
+mkdir('images');
 if display % user selects cluster to graph
     figClust = figure('Name','View by Cluster','NumberTitle','off');
     set(gcf,'pos',[400 200 1000 600]);
@@ -56,11 +58,13 @@ else % graph and save all clusters
     tic;
     for i = 1:size(clusters,1)
         clustNum = clusters(i);
-        fig = figure();
+        %fig = figure();
+        figure
         set(gcf,'pos',[400 200 1000 600]);
-        createClusterGrid(fig,out,param,clustNum);
-        saveas(fig,['cluster_',num2str(clustNum-1),'.png']);
-        close(fig);
+        createClusterGrid(figure,out,param,clustNum);
+       % saveas(fig,['images\cluster_',num2str(clustNum-1),'.png']);
+        print(['images\cluster_',num2str(clustNum-1)],'-dpng');
+        close(figure);
     end
     fprintf('graphSpikes took %2.2f minutes to run \n', floor(toc/0.6)/100);
 end

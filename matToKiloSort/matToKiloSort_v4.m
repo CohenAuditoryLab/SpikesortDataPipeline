@@ -12,7 +12,7 @@ function matToKiloSort_v4(fbinary,fpath,num_channels)
 % fpath=[fpath '_AL'];
 % pathToUnmerged = [fpath,'\NoMerge'];
 % % specify location to store data files for this simulation
-% if ~exist(fpath, 'dir'); mkdir(fpath); end
+% if ~exist(fpath, 'dir'); mkdir(fpath); end-
 % if ~exist(pathToUnmerged, 'dir'); mkdir(pathToUnmerged); end
 % % run the config file to build the structure of options (ops)
 % run(fullfile(pathToYourConfigFile, 'config_v2.m'))

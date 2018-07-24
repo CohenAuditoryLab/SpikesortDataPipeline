@@ -287,7 +287,7 @@ fprintf('Time %3.0fs. Loading raw data and applying filters... \n', toc);
                 channels_files{bin_in}=file_list(all_AL(bin_in)).name;
         end
     end
-%fid         = fopen(ops.fbinary, 'r');
+%fid    = fopen(ops.fbinary, 'r');
 fidW    = fopen(ops.fproc, 'w');
 
 if strcmp(ops.initialize, 'fromData')

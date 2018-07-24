@@ -17,14 +17,12 @@ if ~exist(fpath, 'dir'); mkdir(fpath); end
 if ~exist(pathToUnmerged, 'dir'); mkdir(pathToUnmerged); end
 
 % run the config file to build the structure of options (ops)
-%run(fullfile(pathToYourConfigFile, 'config_one.m'));
- run(fullfile(pathToYourConfigFile, 'config.m'));
-%run(fullfile(pathToYourConfigFile, 'config_single.m'));
-if mod(ops.Nfilt,32) ~= 0, ops.Nfilt = ops.Nfilt + 32 - mod(ops.Nfilt); end
-% 
- if ops.GPU, gpuDevice(1); end % initialize GPU
+run(fullfile(pathToYourConfigFile, 'config_tetrode.m'))
+ops.Nfilt = 64;
 
-createChannelMapFile(fpath,num_channels); % create and save file in specified location
+if ops.GPU, gpuDevice(1); end % initialize GPU
+
+createChannelMapFile(fpath,num_channels) % create and save file in specified location
 
 %% process formatted data with KiloSort
 [rez, DATA, uproj] = preprocessData(ops); % preprocess data and extract spikes
